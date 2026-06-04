@@ -52,6 +52,8 @@ function getTanggalPensiun(tanggalLahir: string | null, bup: number): string | n
   try {
     const d = new Date(tanggalLahir)
     d.setFullYear(d.getFullYear() + bup)
+    d.setMonth(d.getMonth() + 1)
+    d.setDate(1)
     return d.toISOString()
   } catch { return null }
 }
