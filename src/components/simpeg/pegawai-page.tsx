@@ -540,17 +540,18 @@ export default function PegawaiPage() {
                 {p.riwayatPangkat && p.riwayatPangkat.length > 0 && (
                   <>
                     <h3 className="font-semibold mb-3">Riwayat Pangkat</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Pangkat</TableHead>
-                          <TableHead>Golongan</TableHead>
-                          <TableHead>TMT</TableHead>
-                          <TableHead>Nomor SK</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatPangkat.map((r) => (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Pangkat</TableHead>
+                            <TableHead>Golongan</TableHead>
+                            <TableHead>TMT</TableHead>
+                            <TableHead>Nomor SK</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatPangkat.map((r) => (
                           <TableRow key={r.id}>
                             <TableCell>{r.pangkat ?? '-'}</TableCell>
                             <TableCell>{r.golongan ?? '-'}</TableCell>
@@ -560,6 +561,7 @@ export default function PegawaiPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </>
                 )}
               </CardContent>
@@ -582,18 +584,19 @@ export default function PegawaiPage() {
                 {p.riwayatPendidikan && p.riwayatPendidikan.length > 0 && (
                   <>
                     <h3 className="font-semibold mb-3">Riwayat Pendidikan</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Jenjang</TableHead>
-                          <TableHead>Jurusan</TableHead>
-                          <TableHead>Nama PT/Sekolah</TableHead>
-                          <TableHead>Tahun Lulus</TableHead>
-                          <TableHead>No. Ijazah</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatPendidikan.map((r) => (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Jenjang</TableHead>
+                            <TableHead>Jurusan</TableHead>
+                            <TableHead>Nama PT/Sekolah</TableHead>
+                            <TableHead>Tahun Lulus</TableHead>
+                            <TableHead>No. Ijazah</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatPendidikan.map((r) => (
                           <TableRow key={r.id}>
                             <TableCell>{r.jenjang ?? '-'}</TableCell>
                             <TableCell>{r.jurusan ?? '-'}</TableCell>
@@ -604,6 +607,7 @@ export default function PegawaiPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </>
                 )}
               </CardContent>
@@ -630,28 +634,30 @@ export default function PegawaiPage() {
                 {p.riwayatSertifikasi && p.riwayatSertifikasi.length > 0 && (
                   <>
                     <h3 className="font-semibold mb-3">Riwayat Sertifikasi</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Nomor</TableHead>
-                          <TableHead>Bidang</TableHead>
-                          <TableHead>Tahun</TableHead>
-                          <TableHead>NRG</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatSertifikasi.map((r) => (
-                          <TableRow key={r.id}>
-                            <TableCell>{r.statusSertifikasi ?? '-'}</TableCell>
-                            <TableCell>{r.nomorSertifikat ?? '-'}</TableCell>
-                            <TableCell>{r.bidangSertifikasi ?? '-'}</TableCell>
-                            <TableCell>{r.tahunSertifikasi ?? '-'}</TableCell>
-                            <TableCell>{r.nrg ?? '-'}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Nomor</TableHead>
+                            <TableHead>Bidang</TableHead>
+                            <TableHead>Tahun</TableHead>
+                            <TableHead>NRG</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatSertifikasi.map((r) => (
+                            <TableRow key={r.id}>
+                              <TableCell>{r.statusSertifikasi ?? '-'}</TableCell>
+                              <TableCell>{r.nomorSertifikat ?? '-'}</TableCell>
+                              <TableCell>{r.bidangSertifikasi ?? '-'}</TableCell>
+                              <TableCell>{r.tahunSertifikasi ?? '-'}</TableCell>
+                              <TableCell>{r.nrg ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </>
                 )}
               </CardContent>
@@ -701,26 +707,28 @@ export default function PegawaiPage() {
                 </CardHeader>
                 <CardContent>
                   {p.riwayatJabatan && p.riwayatJabatan.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Jabatan</TableHead>
-                          <TableHead>Unit Kerja</TableHead>
-                          <TableHead>TMT</TableHead>
-                          <TableHead>Nomor SK</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatJabatan.map((r) => (
-                          <TableRow key={r.id}>
-                            <TableCell>{r.jabatan ?? '-'}</TableCell>
-                            <TableCell>{r.unitKerja ?? '-'}</TableCell>
-                            <TableCell>{r.tmtJabatan ? new Date(r.tmtJabatan).toLocaleDateString('id-ID') : '-'}</TableCell>
-                            <TableCell>{r.nomorSk ?? '-'}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Jabatan</TableHead>
+                            <TableHead>Unit Kerja</TableHead>
+                            <TableHead>TMT</TableHead>
+                            <TableHead>Nomor SK</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatJabatan.map((r) => (
+                            <TableRow key={r.id}>
+                              <TableCell>{r.jabatan ?? '-'}</TableCell>
+                              <TableCell>{r.unitKerja ?? '-'}</TableCell>
+                              <TableCell>{r.tmtJabatan ? new Date(r.tmtJabatan).toLocaleDateString('id-ID') : '-'}</TableCell>
+                              <TableCell>{r.nomorSk ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   ) : (
                     <p className="text-muted-foreground text-sm">Belum ada riwayat jabatan</p>
                   )}
@@ -734,28 +742,30 @@ export default function PegawaiPage() {
                 </CardHeader>
                 <CardContent>
                   {p.riwayatMutasi && p.riwayatMutasi.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Sekolah Asal</TableHead>
-                          <TableHead>Sekolah Tujuan</TableHead>
-                          <TableHead>Tanggal</TableHead>
-                          <TableHead>Nomor SK</TableHead>
-                          <TableHead>Keterangan</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatMutasi.map((r) => (
-                          <TableRow key={r.id}>
-                            <TableCell>{r.sekolahAsal ?? '-'}</TableCell>
-                            <TableCell>{r.sekolahTujuan ?? '-'}</TableCell>
-                            <TableCell>{r.tanggalMutasi ? new Date(r.tanggalMutasi).toLocaleDateString('id-ID') : '-'}</TableCell>
-                            <TableCell>{r.nomorSk ?? '-'}</TableCell>
-                            <TableCell>{r.keterangan ?? '-'}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Sekolah Asal</TableHead>
+                            <TableHead>Sekolah Tujuan</TableHead>
+                            <TableHead>Tanggal</TableHead>
+                            <TableHead>Nomor SK</TableHead>
+                            <TableHead>Keterangan</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatMutasi.map((r) => (
+                            <TableRow key={r.id}>
+                              <TableCell>{r.sekolahAsal ?? '-'}</TableCell>
+                              <TableCell>{r.sekolahTujuan ?? '-'}</TableCell>
+                              <TableCell>{r.tanggalMutasi ? new Date(r.tanggalMutasi).toLocaleDateString('id-ID') : '-'}</TableCell>
+                              <TableCell>{r.nomorSk ?? '-'}</TableCell>
+                              <TableCell>{r.keterangan ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   ) : (
                     <p className="text-muted-foreground text-sm">Belum ada riwayat mutasi</p>
                   )}
@@ -769,26 +779,28 @@ export default function PegawaiPage() {
                 </CardHeader>
                 <CardContent>
                   {p.riwayatPelatihan && p.riwayatPelatihan.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nama Pelatihan</TableHead>
-                          <TableHead>Penyelenggara</TableHead>
-                          <TableHead>Tahun</TableHead>
-                          <TableHead>Nomor Sertifikat</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {p.riwayatPelatihan.map((r) => (
-                          <TableRow key={r.id}>
-                            <TableCell>{r.namaPelatihan ?? '-'}</TableCell>
-                            <TableCell>{r.penyelenggara ?? '-'}</TableCell>
-                            <TableCell>{r.tahunPelatihan ?? '-'}</TableCell>
-                            <TableCell>{r.nomorSertifikat ?? '-'}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nama Pelatihan</TableHead>
+                            <TableHead>Penyelenggara</TableHead>
+                            <TableHead>Tahun</TableHead>
+                            <TableHead>Nomor Sertifikat</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {p.riwayatPelatihan.map((r) => (
+                            <TableRow key={r.id}>
+                              <TableCell>{r.namaPelatihan ?? '-'}</TableCell>
+                              <TableCell>{r.penyelenggara ?? '-'}</TableCell>
+                              <TableCell>{r.tahunPelatihan ?? '-'}</TableCell>
+                              <TableCell>{r.nomorSertifikat ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   ) : (
                     <p className="text-muted-foreground text-sm">Belum ada riwayat pelatihan</p>
                   )}
@@ -805,28 +817,30 @@ export default function PegawaiPage() {
               </CardHeader>
               <CardContent>
                 {p.dokumenPegawai && p.dokumenPegawai.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Jenis Dokumen</TableHead>
-                        <TableHead>Nama File</TableHead>
-                        <TableHead>Ukuran</TableHead>
-                        <TableHead>Tanggal Upload</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {p.dokumenPegawai.map((d) => (
-                        <TableRow key={d.id}>
-                          <TableCell>
-                            <Badge variant="secondary">{d.jenisDokumen?.replace(/_/g, ' ') ?? '-'}</Badge>
-                          </TableCell>
-                          <TableCell>{d.namaFile ?? '-'}</TableCell>
-                          <TableCell>{d.ukuranFile ? `${(d.ukuranFile / 1024).toFixed(1)} KB` : '-'}</TableCell>
-                          <TableCell>{new Date(d.uploadedAt).toLocaleDateString('id-ID')}</TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Jenis Dokumen</TableHead>
+                          <TableHead>Nama File</TableHead>
+                          <TableHead>Ukuran</TableHead>
+                          <TableHead>Tanggal Upload</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {p.dokumenPegawai.map((d) => (
+                          <TableRow key={d.id}>
+                            <TableCell>
+                              <Badge variant="secondary">{d.jenisDokumen?.replace(/_/g, ' ') ?? '-'}</Badge>
+                            </TableCell>
+                            <TableCell>{d.namaFile ?? '-'}</TableCell>
+                            <TableCell>{d.ukuranFile ? `${(d.ukuranFile / 1024).toFixed(1)} KB` : '-'}</TableCell>
+                            <TableCell>{new Date(d.uploadedAt).toLocaleDateString('id-ID')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 ) : (
                   <p className="text-muted-foreground text-sm">Belum ada dokumen yang diupload</p>
                 )}
@@ -1009,7 +1023,7 @@ export default function PegawaiPage() {
 
       {/* Data Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>

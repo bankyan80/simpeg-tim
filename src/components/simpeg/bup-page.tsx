@@ -213,7 +213,7 @@ export default function BupPage() {
         <TabsContent value={activeTab} className="mt-4">
           {activeTab === 'rekap' ? (
             <Card>
-              <CardContent className="p-0">
+              <CardContent className="p-0 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-blue-50">

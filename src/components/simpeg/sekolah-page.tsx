@@ -386,28 +386,30 @@ export default function SekolahPage() {
                 {pegawaiList.length === 0 ? (
                   <p className="text-sm text-gray-500 py-4 text-center">Belum ada pegawai di sekolah ini</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-10">No</TableHead>
-                        <TableHead>Nama</TableHead>
-                        <TableHead>NIP</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Jabatan</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pegawaiList.slice(0, 20).map((p, idx) => (
-                        <TableRow key={p.id}>
-                          <TableCell>{idx + 1}</TableCell>
-                          <TableCell className="font-medium">{p.nama}</TableCell>
-                          <TableCell>{p.nip || '-'}</TableCell>
-                          <TableCell><Badge className="text-xs bg-blue-100 text-blue-800">{(p.statusKepegawaian || '-').replace('_', ' ')}</Badge></TableCell>
-                          <TableCell>{p.jabatan || '-'}</TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">No</TableHead>
+                          <TableHead>Nama</TableHead>
+                          <TableHead>NIP</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Jabatan</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {pegawaiList.slice(0, 20).map((p, idx) => (
+                          <TableRow key={p.id}>
+                            <TableCell>{idx + 1}</TableCell>
+                            <TableCell className="font-medium">{p.nama}</TableCell>
+                            <TableCell>{p.nip || '-'}</TableCell>
+                            <TableCell><Badge className="text-xs bg-blue-100 text-blue-800">{(p.statusKepegawaian || '-').replace('_', ' ')}</Badge></TableCell>
+                            <TableCell>{p.jabatan || '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </div>
             </div>

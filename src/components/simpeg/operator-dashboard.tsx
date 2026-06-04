@@ -377,13 +377,13 @@ export default function OperatorDashboard() {
 
         {/* Table */}
         <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">No</TableHead>
-                  <TableHead>Nama</TableHead>
-                  <TableHead className="hidden md:table-cell">NIP</TableHead>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">No</TableHead>
+                <TableHead>Nama</TableHead>
+                <TableHead className="hidden md:table-cell">NIP</TableHead>
                   <TableHead className="hidden sm:table-cell">Jabatan</TableHead>
                   <TableHead>Status Kepegawaian</TableHead>
                   <TableHead className="hidden lg:table-cell">Sertifikasi</TableHead>
