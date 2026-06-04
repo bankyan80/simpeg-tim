@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   keywords: ["SIMPEG", "Kepegawaian", "Kecamatan", "Lemahabang", "Pegawai", "Guru", "PNS", "Dinas Pendidikan"],
   authors: [{ name: "Tim Kerja Dinas Pendidikan Kec. Lemahabang" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/logokab.png",
   },
 };
 

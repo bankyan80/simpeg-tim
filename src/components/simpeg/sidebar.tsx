@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useSimpegStore } from '@/lib/store';
 import {
   LayoutDashboard,
@@ -104,8 +105,14 @@ function SidebarContent({
           collapsed && 'justify-center px-2'
         )}
       >
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 font-bold text-white shadow-lg shadow-blue-500/30">
-          S
+        <div className="flex size-10 shrink-0 items-center justify-center">
+          <Image
+            src="/logokab.png"
+            alt="Logo"
+            width={40}
+            height={40}
+            className="object-contain"
+          />
         </div>
         {!collapsed && (
           <div className="min-w-0">

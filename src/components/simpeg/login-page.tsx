@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useSimpegStore } from '@/lib/store';
 import {
   Shield,
@@ -56,8 +57,15 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo & Branding */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 shadow-lg shadow-blue-900/40">
-            <Building2 className="size-10 text-white" />
+          <div className="mx-auto mb-4 flex size-24 items-center justify-center">
+            <Image
+              src="/logokab.png"
+              alt="Logo Kabupaten Cirebon"
+              width={96}
+              height={96}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-white">SIMPEG</h1>
           <p className="mt-1 text-base font-medium text-blue-300">

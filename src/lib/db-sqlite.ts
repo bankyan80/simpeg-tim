@@ -1,44 +1,75 @@
 import Database from 'better-sqlite3'
 import path from 'path'
+import fs from 'fs'
 
-// Global singleton for better-sqlite3
 const globalForDb = globalThis as unknown as {
   sqlite: Database.Database | undefined
 }
 
-const DB_PATH = path.join(process.cwd(), 'db', 'custom.db')
+function getDbPath(): string {
+  const original = path.join(process.cwd(), 'db', 'custom.db')
 
-const sqlite = globalForDb.sqlite ?? new Database(DB_PATH, {
-  readonly: false,
-  fileMustExist: false,
-  timeout: 10000,
-})
+  if (!process.env.VERCEL) return original
 
-// Enable WAL mode for better concurrency
-sqlite.pragma('journal_mode = WAL')
-sqlite.pragma('busy_timeout = 10000')
-sqlite.pragma('foreign_keys = ON')
+  const tmpPath = path.join('/tmp', 'custom.db')
+  if (!fs.existsSync(tmpPath) && fs.existsSync(original)) {
+    fs.copyFileSync(original, tmpPath)
+  }
+  return tmpPath
+}
 
-if (process.env.NODE_ENV !== 'production') globalForDb.sqlite = sqlite
+function initDb(): Database.Database {
+  const existing = globalForDb.sqlite
+  if (existing) return existing
 
-// Helper types
+  const dbPath = getDbPath()
+
+  try {
+    const db = new Database(dbPath, {
+      readonly: false,
+      fileMustExist: false,
+      timeout: 10000,
+    })
+
+    try { db.pragma('journal_mode = WAL') } catch {}
+    try { db.pragma('busy_timeout = 10000') } catch {}
+    try { db.pragma('foreign_keys = ON') } catch {}
+
+    if (process.env.NODE_ENV !== 'production') {
+      globalForDb.sqlite = db
+    }
+
+    return db
+  } catch (initError) {
+    console.error('DB init error:', initError)
+    throw initError
+  }
+}
+
+let _db: Database.Database | null = null
+
+function getDb(): Database.Database {
+  if (!_db) {
+    _db = initDb()
+  }
+  return _db
+}
+
 export interface QueryResult {
   lastInsertRowid: number | bigint
   changes: number
 }
 
-// Normalize params to always be an array or undefined
 function normalizeParams(params?: Record<string, unknown> | unknown[]): unknown[] | undefined {
   if (params === undefined || params === null) return undefined
   if (Array.isArray(params)) return params.length > 0 ? params : undefined
-  // Object params - not supported, return undefined
   return undefined
 }
 
-// Query helper - for SELECT statements
 export function query<T = Record<string, unknown>>(sql: string, params?: Record<string, unknown> | unknown[]): T[] {
   try {
-    const stmt = sqlite.prepare(sql)
+    const db = getDb()
+    const stmt = db.prepare(sql)
     const p = normalizeParams(params)
     if (p && p.length > 0) {
       return stmt.all(...p) as T[]
@@ -50,10 +81,10 @@ export function query<T = Record<string, unknown>>(sql: string, params?: Record<
   }
 }
 
-// Query one row
 export function queryOne<T = Record<string, unknown>>(sql: string, params?: Record<string, unknown> | unknown[]): T | null {
   try {
-    const stmt = sqlite.prepare(sql)
+    const db = getDb()
+    const stmt = db.prepare(sql)
     const p = normalizeParams(params)
     if (p && p.length > 0) {
       return stmt.get(...p) as T ?? null
@@ -65,10 +96,10 @@ export function queryOne<T = Record<string, unknown>>(sql: string, params?: Reco
   }
 }
 
-// Execute - for INSERT, UPDATE, DELETE
 export function execute(sql: string, params?: Record<string, unknown> | unknown[]): QueryResult {
   try {
-    const stmt = sqlite.prepare(sql)
+    const db = getDb()
+    const stmt = db.prepare(sql)
     const p = normalizeParams(params)
     let result: Database.RunResult
     if (p && p.length > 0) {
@@ -86,13 +117,12 @@ export function execute(sql: string, params?: Record<string, unknown> | unknown[
   }
 }
 
-// Transaction helper
 export function transaction<T>(fn: () => T): T {
-  const txn = sqlite.transaction(fn)
+  const db = getDb()
+  const txn = db.transaction(fn)
   return txn()
 }
 
-// Count helper
 export function count(table: string, where?: string, params?: Record<string, unknown> | unknown[]): number {
   const sql = where
     ? `SELECT COUNT(*) as cnt FROM ${table} WHERE ${where}`
@@ -101,5 +131,8 @@ export function count(table: string, where?: string, params?: Record<string, unk
   return result?.cnt ?? 0
 }
 
-export { sqlite }
-export default sqlite
+export function getDbInstance(): Database.Database {
+  return getDb()
+}
+
+export default getDb
