@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  nama          String
+  email         String   @unique
+  role          String   @default("operator") // admin_kecamatan | operator
+  sekolahId     String?
+  status        String   @default("aktif") // aktif | nonaktif
+  foto          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sekolah       Sekolah? @relation(fields: [sekolahId], references: [id])
+  logAktivitas  LogAktivitas[]
+  absensiInput  AbsensiPegawai[] @relation("AbsensiInputBy")
+}
+
+model Sekolah {
+  id             String   @id @default(cuid())
+  npsn           String   @unique
+  namaSekolah    String
+  jenjang        String   // SD | TK | KB/PAUD
+  kecamatan      String   @default("Lemahabang")
+  desa           String?
+  alamat         String?
+  kepalaSekolah  String?
+  status         String   @default("aktif")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  users          User[]
+  pegawai        Pegawai[]
+  absensi        AbsensiPegawai[]
+  validasi       ValidasiData[]
+  mutasiAsal     MutasiPegawai[] @relation("MutasiAsal")
+  mutasiTujuan   MutasiPegawai[] @relation("MutasiTujuan")
+}
+
+model Pegawai {
+  id                String   @id @default(cuid())
+  sekolahId         String
+  nik               String   @unique
+  nip               String?
+  nuptk             String?
+  nama              String
+  tempatLahir       String?
+  tanggalLahir      DateTime?
+  jenisKelamin      String?  // L | P
+  agama             String?
+  alamat            String?
+  noHp              String?
+  email             String?
+  foto              String?
+  jabatan           String?
+  jenisPegawai      String?  // Guru | Tendik
+  statusKepegawaian String?  // PNS | PPPK | PPPK_Paruh_Waktu | Honorer | GTY | GTT | Tenaga_Administrasi | Penjaga_Sekolah | Kepala_Sekolah
+  statusPegawai     String   @default("aktif") // aktif | tidak_aktif | pensiun | mutasi
+  pangkat           String?
+  golongan          String?
+  pendidikanTerakhir String?
+  jurusan           String?
+  sertifikasi       String?  // Belum | Proses | Terisi
+  nomorSertifikat   String?
+  bidangSertifikasi String?
+  tahunSertifikasi  String?
+  nrg               String?
+  statusTpg         String?
+  tmtTugas          DateTime?
+  tmtSekolah        DateTime?
+  tmtJabatan        DateTime?
+  tmtPangkat        DateTime?
+  masaKerjaTahun    Int      @default(0)
+  masaKerjaBulan    Int      @default(0)
+  tahunPensiun      Int?
+  statusBup         String?  // aktif | akan_pensiun | sudah_pensiun
+  keteranganBup     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  sekolah           Sekolah  @relation(fields: [sekolahId], references: [id])
+  riwayatPendidikan RiwayatPendidikan[]
+  riwayatJabatan    RiwayatJabatan[]
+  riwayatPangkat    RiwayatPangkat[]
+  riwayatSertifikasi RiwayatSertifikasi[]
+  riwayatMutasi     RiwayatMutasi[]
+  riwayatPelatihan  RiwayatPelatihan[]
+  dokumenPegawai    DokumenPegawai[]
+  absensi           AbsensiPegawai[]
+  validasi          ValidasiData[]
+  mutasi            MutasiPegawai[]
+}
+
+model RiwayatPendidikan {
+  id              String   @id @default(cuid())
+  pegawaiId       String
+  jenjang         String?
+  jurusan         String?
+  namaSekolahKampus String?
+  tahunLulus      String?
+  nomorIjazah     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  pegawai         Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model RiwayatJabatan {
+  id         String   @id @default(cuid())
+  pegawaiId  String
+  jabatan    String?
+  unitKerja  String?
+  tmtJabatan DateTime?
+  nomorSk    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  pegawai    Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model RiwayatPangkat {
+  id          String   @id @default(cuid())
+  pegawaiId   String
+  pangkat     String?
+  golongan    String?
+  tmtPangkat  DateTime?
+  nomorSk     String?
+  tanggalSk   DateTime?
+  pejabatSk   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pegawai     Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model RiwayatSertifikasi {
+  id               String   @id @default(cuid())
+  pegawaiId        String
+  statusSertifikasi String?
+  nomorSertifikat  String?
+  bidangSertifikasi String?
+  tahunSertifikasi String?
+  nrg              String?
+  statusTpg        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  pegawai          Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model RiwayatMutasi {
+  id            String   @id @default(cuid())
+  pegawaiId     String
+  sekolahAsal   String?
+  sekolahTujuan String?
+  tanggalMutasi DateTime?
+  nomorSk       String?
+  keterangan    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  pegawai       Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model RiwayatPelatihan {
+  id              String   @id @default(cuid())
+  pegawaiId       String
+  namaPelatihan   String?
+  penyelenggara   String?
+  tahunPelatihan  String?
+  nomorSertifikat String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  pegawai         Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model DokumenPegawai {
+  id            String   @id @default(cuid())
+  pegawaiId     String
+  jenisDokumen  String? // KTP | KK | Ijazah | SK_Pengangkatan | SK_Pangkat | Sertifikat_Pendidik | Kartu_ASN_PPPK | Dokumen_Lainnya
+  namaFile      String?
+  urlFile       String?
+  ukuranFile    Int?
+  uploadedAt    DateTime @default(now())
+  pegawai       Pegawai  @relation(fields: [pegawaiId], references: [id])
+}
+
+model AbsensiPegawai {
+  id              String   @id @default(cuid())
+  tanggal         DateTime
+  pegawaiId       String
+  nip             String?
+  namaPegawai     String
+  unitKerja       String
+  statusPegawai   String? // PNS | PPPK | PPPK_Paruh_Waktu
+  jamMasuk        String?
+  jamKeluar       String?
+  keterangan      String? // Hadir | Terlambat | Izin | Sakit | Alfa | Dinas_Luar | Cuti | lainnya
+  sekolahId       String
+  inputBy         String
+  statusValidasi  String   @default("pending") // pending | divalidasi | ditolak
+  validatedBy     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  pegawai         Pegawai  @relation(fields: [pegawaiId], references: [id])
+  sekolah         Sekolah  @relation(fields: [sekolahId], references: [id])
+  inputByUser     User     @relation("AbsensiInputBy", fields: [inputBy], references: [id])
+}
+
+model ValidasiData {
+  id                String   @id @default(cuid())
+  pegawaiId         String?
+  sekolahId         String?
+  jenisPengajuan    String? // data_baru | perubahan_data | mutasi | pensiun | tidak_aktif
+  statusValidasi    String   @default("pending") // pending | divalidasi | ditolak
+  catatanAdmin      String?
+  dataPerubahan     String? // JSON string of changes
+  tanggalPengajuan  DateTime @default(now())
+  tanggalValidasi   DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  pegawai           Pegawai? @relation(fields: [pegawaiId], references: [id])
+  sekolah           Sekolah? @relation(fields: [sekolahId], references: [id])
+}
+
+model MutasiPegawai {
+  id            String   @id @default(cuid())
+  pegawaiId     String
+  sekolahAsalId String
+  sekolahTujuanId String
+  tanggalMutasi DateTime?
+  nomorSk       String?
+  keterangan    String?
+  status        String   @default("pending") // pending | disetujui | ditolak
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  pegawai       Pegawai  @relation(fields: [pegawaiId], references: [id])
+  sekolahAsal   Sekolah  @relation("MutasiAsal", fields: [sekolahAsalId], references: [id])
+  sekolahTujuan Sekolah  @relation("MutasiTujuan", fields: [sekolahTujuanId], references: [id])
+}
+
+model LogAktivitas {
+  id         String   @id @default(cuid())
+  userId     String
+  aksi       String? // login | tambah | edit | hapus | validasi | export | cetak
+  modul      String? // pegawai | absensi | validasi | mutasi | sekolah | pengaturan
+  keterangan String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Pengaturan {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
