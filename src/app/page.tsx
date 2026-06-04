@@ -3,6 +3,7 @@
 import { useSimpegStore } from '@/lib/store'
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import {
   LayoutDashboard, Users, ClipboardList, CheckSquare, ArrowRightLeft,
   CalendarClock, FileBarChart, History, Building2, Settings, User,
@@ -317,8 +318,14 @@ function MainApp() {
         {/* Logo */}
         <div className={`p-4 border-b border-blue-800/30 ${sidebarCollapsed ? 'px-2' : ''}`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <Image
+                src="/logokab.png"
+                alt="Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
             </div>
             <div className={`overflow-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
               <h2 className="font-bold text-white text-sm whitespace-nowrap">SIMPEG</h2>
