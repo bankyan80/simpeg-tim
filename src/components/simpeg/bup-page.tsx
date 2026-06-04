@@ -42,8 +42,9 @@ function getBUP(jenisPegawai: string | null): number {
 }
 
 function getSisaWaktuColor(sisa: number): string {
-  if (sisa <= 0) return 'text-red-600 font-bold'
-  if (sisa === 1) return 'text-amber-600 font-semibold'
+  if (sisa < 0) return 'text-red-600 font-bold'
+  if (sisa >= 0 && sisa <= 0.5) return 'text-red-600 font-bold'
+  if (sisa <= 1) return 'text-amber-600 font-semibold'
   return 'text-blue-600'
 }
 
@@ -77,7 +78,8 @@ export default function BupPage() {
   const pageSize = 10
 
   const sekolahId = isAdmin ? filterSekolah : (user?.sekolahId || '')
-  const currentYear = new Date().getFullYear()
+  const today = new Date()
+const currentYear = today.getFullYear()
 
   const load = useCallback(() => {
     const filters: Record<string, string> = {
@@ -101,7 +103,8 @@ export default function BupPage() {
       const bup = getBUP(p.jenisPegawai)
       const tahunPensiun = p.tahunPensiun || (p.tanggalLahir ? new Date(p.tanggalLahir).getFullYear() + bup : 0)
       const tanggalPensiun = getTanggalPensiun(p.tanggalLahir, bup)
-      const sisaWaktu = tahunPensiun - currentYear
+      const diffMs = tanggalPensiun ? new Date(tanggalPensiun).getTime() - today.getTime() : 0
+      const sisaWaktu = diffMs / (365.25 * 24 * 60 * 60 * 1000)
       return { ...p, usia, bup, tahunPensiun, tanggalPensiun, sisaWaktu }
     })
     .sort((a, b) => {
@@ -110,7 +113,7 @@ export default function BupPage() {
       return aDate.localeCompare(bDate)
     })
 
-  const akanPensiunList = bupData.filter(p => p.sisaWaktu <= 1)
+  const akanPensiunList = bupData.filter(p => p.sisaWaktu >= 0 && p.sisaWaktu <= 1)
 
   const displayList = activeTab === 'akan_pensiun' ? akanPensiunList : bupData
 
