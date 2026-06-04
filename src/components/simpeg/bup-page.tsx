@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import {
-  Clock, CalendarCheck, Calculator, Printer, ChevronLeft, ChevronRight, AlertTriangle
+  Clock, Calculator, Printer, ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react'
 
 function formatDate(dateStr: string | null): string {
@@ -47,10 +47,18 @@ function getSisaWaktuColor(sisa: number): string {
   return 'text-blue-600'
 }
 
+function getTanggalPensiun(tanggalLahir: string | null, bup: number): string | null {
+  if (!tanggalLahir) return null
+  try {
+    const d = new Date(tanggalLahir)
+    d.setFullYear(d.getFullYear() + bup)
+    return d.toISOString()
+  } catch { return null }
+}
+
 function getStatusBupColor(statusBup: string | null): string {
   switch (statusBup) {
     case 'akan_pensiun': return 'bg-red-100 text-red-800'
-    case 'sudah_pensiun': return 'bg-gray-100 text-gray-800'
     case 'aktif': return 'bg-blue-100 text-blue-800'
     default: return 'bg-gray-100 text-gray-800'
   }
@@ -76,7 +84,6 @@ export default function BupPage() {
     }
     if (sekolahId) filters.sekolahId = sekolahId
     if (activeTab === 'akan_pensiun') filters.statusBup = 'akan_pensiun'
-    if (activeTab === 'sudah_pensiun') filters.statusBup = 'sudah_pensiun'
     if (activeTab === 'rekap') filters.statusPegawai = 'aktif'
     loadPegawai(filters)
   }, [page, sekolahId, activeTab, loadPegawai])
@@ -86,21 +93,24 @@ export default function BupPage() {
 
   // Calculate BUP data
   const bupData = pegawaiList
-    .filter(p => p.tanggalLahir)
+    .filter(p => p.tanggalLahir && p.statusBup !== 'sudah_pensiun')
     .map(p => {
       const usia = calculateAge(p.tanggalLahir)
       const bup = getBUP(p.jenisPegawai)
       const tahunPensiun = p.tahunPensiun || (p.tanggalLahir ? new Date(p.tanggalLahir).getFullYear() + bup : 0)
+      const tanggalPensiun = getTanggalPensiun(p.tanggalLahir, bup)
       const sisaWaktu = tahunPensiun - currentYear
-      return { ...p, usia, bup, tahunPensiun, sisaWaktu }
+      return { ...p, usia, bup, tahunPensiun, tanggalPensiun, sisaWaktu }
+    })
+    .sort((a, b) => {
+      const aDate = a.tanggalPensiun || ''
+      const bDate = b.tanggalPensiun || ''
+      return aDate.localeCompare(bDate)
     })
 
-  const akanPensiunList = bupData.filter(p => p.sisaWaktu <= 1 && p.statusPegawai !== 'pensiun')
-  const sudahPensiunList = bupData.filter(p => p.statusPegawai === 'pensiun' || p.statusBup === 'sudah_pensiun')
+  const akanPensiunList = bupData.filter(p => p.sisaWaktu <= 1)
 
-  const displayList = activeTab === 'akan_pensiun' ? akanPensiunList
-    : activeTab === 'sudah_pensiun' ? sudahPensiunList
-    : bupData
+  const displayList = activeTab === 'akan_pensiun' ? akanPensiunList : bupData
 
   const totalPages = Math.max(1, Math.ceil(displayList.length / pageSize))
   const paginatedList = displayList.slice((page - 1) * pageSize, page * pageSize)
@@ -143,15 +153,6 @@ export default function BupPage() {
             <div>
               <p className="text-lg font-bold text-red-800">{akanPensiunList.length}</p>
               <p className="text-xs text-red-600">Akan Pensiun</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 bg-gray-50">
-          <CardContent className="p-3 flex items-center gap-2">
-            <CalendarCheck className="w-5 h-5 text-gray-600" />
-            <div>
-              <p className="text-lg font-bold text-gray-800">{sudahPensiunList.length}</p>
-              <p className="text-xs text-gray-600">Sudah Pensiun</p>
             </div>
           </CardContent>
         </Card>
@@ -204,7 +205,6 @@ export default function BupPage() {
       <Tabs value={activeTab} onValueChange={v => { setActiveTab(v); setPage(1) }}>
         <TabsList className="bg-blue-50">
           <TabsTrigger value="akan_pensiun">Akan Pensiun</TabsTrigger>
-          <TabsTrigger value="sudah_pensiun">Sudah Pensiun</TabsTrigger>
           <TabsTrigger value="rekap">Rekap per Tahun</TabsTrigger>
         </TabsList>
 
@@ -216,7 +216,7 @@ export default function BupPage() {
                   <TableHeader>
                     <TableRow className="bg-blue-50">
                       <TableHead className="w-12 text-center">No</TableHead>
-                      <TableHead>Tahun Pensiun</TableHead>
+                      <TableHead>Tahun</TableHead>
                       <TableHead>Jumlah Pegawai</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -260,7 +260,7 @@ export default function BupPage() {
                         <TableHead className="hidden md:table-cell">Tgl Lahir</TableHead>
                         <TableHead>Usia</TableHead>
                         <TableHead>BUP</TableHead>
-                        <TableHead>Thn Pensiun</TableHead>
+                        <TableHead>Tgl. Pensiun</TableHead>
                         <TableHead>Sisa</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
@@ -288,7 +288,7 @@ export default function BupPage() {
                             <TableCell className="hidden md:table-cell whitespace-nowrap">{formatDate(p.tanggalLahir)}</TableCell>
                             <TableCell>{p.usia} th</TableCell>
                             <TableCell>{p.bup} th</TableCell>
-                            <TableCell className="font-medium">{p.tahunPensiun}</TableCell>
+                            <TableCell className="font-medium whitespace-nowrap">{formatDate(p.tanggalPensiun)}</TableCell>
                             <TableCell>
                               <span className={getSisaWaktuColor(p.sisaWaktu)}>
                                 {p.sisaWaktu <= 0 ? 'Sudah' : `${p.sisaWaktu} th`}
