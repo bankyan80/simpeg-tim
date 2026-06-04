@@ -25,6 +25,8 @@ const PegawaiPage = dynamic(() => import('@/components/simpeg/pegawai-page'), { 
 const AbsensiPage = dynamic(() => import('@/components/simpeg/absensi-page'), { ssr: false })
 const ValidasiPage = dynamic(() => import('@/components/simpeg/validasi-page'), { ssr: false })
 const MutasiPage = dynamic(() => import('@/components/simpeg/mutasi-page'), { ssr: false })
+const RiwayatPage = dynamic(() => import('@/components/simpeg/riwayat-page'), { ssr: false })
+const DokumenPage = dynamic(() => import('@/components/simpeg/dokumen-page'), { ssr: false })
 const BupPage = dynamic(() => import('@/components/simpeg/bup-page'), { ssr: false })
 const LaporanPage = dynamic(() => import('@/components/simpeg/laporan-page'), { ssr: false })
 const LogPage = dynamic(() => import('@/components/simpeg/log-page'), { ssr: false })
@@ -388,8 +390,8 @@ function MainApp() {
       case 'profil': return <ProfilPage />
       // Alias routes for operator-specific pages
       case 'mapping-pegawai': return <PegawaiPage />
-      case 'riwayat-pegawai': return <PegawaiPage />
-      case 'dokumen-pegawai': return <PegawaiPage />
+      case 'riwayat-pegawai': return <RiwayatPage />
+      case 'dokumen-pegawai': return <DokumenPage />
       case 'pengajuan': return <ValidasiPage />
       case 'cetak': return <LaporanPage />
       case 'pegawai-detail': return <PegawaiPage />

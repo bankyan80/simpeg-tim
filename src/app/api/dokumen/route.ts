@@ -1,119 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { query } from '@/lib/db-sqlite'
 
 export async function GET(request: NextRequest) {
   try {
     const pegawaiId = request.nextUrl.searchParams.get('pegawaiId')
+    const sekolahId = request.nextUrl.searchParams.get('sekolahId')
     const jenisDokumen = request.nextUrl.searchParams.get('jenisDokumen')
 
-    if (!pegawaiId) {
-      return NextResponse.json(
-        { success: false, error: 'pegawaiId wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    const where: Record<string, unknown> = { pegawaiId }
-
-    if (jenisDokumen) {
-      where.jenisDokumen = jenisDokumen
-    }
-
     try {
-      const { db } = await import('@/lib/db')
+      const conditions: string[] = []
+      const params: unknown[] = []
 
-      const dokumen = await db.dokumenPegawai.findMany({
-        where,
-        orderBy: { uploadedAt: 'desc' },
+      if (pegawaiId) {
+        conditions.push('d.pegawaiId = ?')
+        params.push(pegawaiId)
+      }
+      if (sekolahId) {
+        conditions.push('p.sekolahId = ?')
+        params.push(sekolahId)
+      }
+      if (jenisDokumen) {
+        conditions.push('d.jenisDokumen = ?')
+        params.push(jenisDokumen)
+      }
+
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+
+      const data = query(
+        `SELECT d.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik,
+                s.namaSekolah as s_namaSekolah
+         FROM DokumenPegawai d
+         LEFT JOIN Pegawai p ON d.pegawaiId = p.id
+         LEFT JOIN Sekolah s ON p.sekolahId = s.id
+         ${whereClause}
+         ORDER BY d.uploadedAt DESC`,
+        params
+      )
+
+      const result = data.map((d: Record<string, unknown>) => {
+        const { p_nama, p_nip, p_nik, s_namaSekolah, ...rest } = d
+        return {
+          ...rest,
+          pegawai: p_nama ? { nama: p_nama, nip: p_nip, nik: p_nik } : null,
+          sekolah: s_namaSekolah ? { namaSekolah: s_namaSekolah } : null,
+        }
       })
 
-      return NextResponse.json({
-        success: true,
-        data: dokumen,
-      })
+      return NextResponse.json({ success: true, data: result })
     } catch (dbError) {
-      console.warn('Dokumen GET: DB query failed, using fallback:', dbError)
-      return NextResponse.json({
-        success: true,
-        data: [],
-      })
+      console.warn('Dokumen GET: DB query failed:', dbError)
+      return NextResponse.json({ success: true, data: [] })
     }
   } catch (error) {
     console.error('Dokumen GET error:', error)
-    return NextResponse.json(
-      { success: false, error: 'Terjadi kesalahan server' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const {
-      pegawaiId,
-      jenisDokumen,
-      namaFile,
-      urlFile,
-      ukuranFile,
-      userId,
-    } = body
-
-    if (!pegawaiId || !jenisDokumen || !namaFile) {
-      return NextResponse.json(
-        { success: false, error: 'Pegawai, jenis dokumen, dan nama file wajib diisi' },
-        { status: 400 }
-      )
-    }
-
-    try {
-      const { db } = await import('@/lib/db')
-
-      // Verify pegawai exists
-      const pegawai = await db.pegawai.findUnique({ where: { id: pegawaiId } })
-      if (!pegawai) {
-        return NextResponse.json(
-          { success: false, error: 'Pegawai tidak ditemukan' },
-          { status: 404 }
-        )
-      }
-
-      // In production, this would upload to Supabase Storage
-      // For now, just store metadata
-      const dokumen = await db.dokumenPegawai.create({
-        data: {
-          pegawaiId,
-          jenisDokumen,
-          namaFile,
-          urlFile: urlFile || null,
-          ukuranFile: ukuranFile || null,
-        },
-      })
-
-      // Create log aktivitas
-      if (userId) {
-        await db.logAktivitas.create({
-          data: {
-            userId,
-            aksi: 'tambah',
-            modul: 'pegawai',
-            keterangan: `Mengupload dokumen ${jenisDokumen} untuk ${pegawai.nama}`,
-          },
-        })
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: dokumen,
-      }, { status: 201 })
-    } catch (dbError) {
-      console.warn('Dokumen POST: DB error:', dbError)
-      return NextResponse.json(
-        { success: false, error: 'Gagal menyimpan ke database' },
-        { status: 500 }
-      )
-    }
-  } catch (error) {
-    console.error('Dokumen POST error:', error)
     return NextResponse.json(
       { success: false, error: 'Terjadi kesalahan server' },
       { status: 500 }

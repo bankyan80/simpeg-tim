@@ -12,6 +12,12 @@ import type {
   DashboardStats,
   DbStatus,
   Notification,
+  RiwayatJabatan,
+  RiwayatMutasi,
+  RiwayatPelatihan,
+  RiwayatPendidikan,
+  RiwayatPangkat,
+  DokumenPegawai,
 } from './types';
 
 interface SimpegStore {
@@ -73,6 +79,14 @@ interface SimpegStore {
   showAbsensiForm: boolean;
   editingAbsensi: AbsensiPegawai | null;
   setShowAbsensiForm: (show: boolean, absensi?: AbsensiPegawai | null) => void;
+
+  riwayatList: RiwayatJabatan[];
+  riwayatTotal: number;
+  loadRiwayat: (filters?: Record<string, string>) => Promise<void>;
+
+  dokumenList: DokumenPegawai[];
+  dokumenTotal: number;
+  loadDokumen: (filters?: Record<string, string>) => Promise<void>;
 
   notification: Notification | null;
   setNotification: (n: Notification | null) => void;
@@ -393,6 +407,58 @@ export const useSimpegStore = create<SimpegStore>()(
             notification: {
               type: 'error',
               message: error instanceof Error ? error.message : 'Gagal memuat pengaturan',
+            },
+          });
+        }
+      },
+
+      riwayatList: [],
+      riwayatTotal: 0,
+
+      loadRiwayat: async (filters?: Record<string, string>) => {
+        set({ loading: true });
+        try {
+          const qs = buildQueryString(filters);
+          const res = await fetch(`/api/riwayat${qs}`);
+          if (!res.ok) throw new Error('Gagal memuat data riwayat');
+          const data = await res.json();
+          set({
+            riwayatList: data.data ?? data,
+            riwayatTotal: data.total ?? (Array.isArray(data) ? data.length : 0),
+            loading: false,
+          });
+        } catch (error) {
+          set({ loading: false });
+          set({
+            notification: {
+              type: 'error',
+              message: error instanceof Error ? error.message : 'Gagal memuat data riwayat',
+            },
+          });
+        }
+      },
+
+      dokumenList: [],
+      dokumenTotal: 0,
+
+      loadDokumen: async (filters?: Record<string, string>) => {
+        set({ loading: true });
+        try {
+          const qs = buildQueryString(filters);
+          const res = await fetch(`/api/dokumen${qs}`);
+          if (!res.ok) throw new Error('Gagal memuat data dokumen');
+          const data = await res.json();
+          set({
+            dokumenList: data.data ?? data,
+            dokumenTotal: data.total ?? (Array.isArray(data) ? data.length : 0),
+            loading: false,
+          });
+        } catch (error) {
+          set({ loading: false });
+          set({
+            notification: {
+              type: 'error',
+              message: error instanceof Error ? error.message : 'Gagal memuat data dokumen',
             },
           });
         }
