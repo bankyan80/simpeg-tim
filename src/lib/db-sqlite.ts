@@ -6,7 +6,7 @@ const globalForDb = globalThis as unknown as {
   sqlite: Database.Database | undefined
 }
 
-const DB_PATH = process.env.DATABASE_URL?.replace('file:', '') || path.join(process.cwd(), 'db', 'custom.db')
+const DB_PATH = path.join(process.cwd(), 'db', 'custom.db')
 
 const sqlite = globalForDb.sqlite ?? new Database(DB_PATH, {
   readonly: false,

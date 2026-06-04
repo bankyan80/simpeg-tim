@@ -55,3 +55,4 @@ server.log
 
 # Large JSON data files (used for seeding, not needed at runtime)
 /data-siswa.json
+.vercel
