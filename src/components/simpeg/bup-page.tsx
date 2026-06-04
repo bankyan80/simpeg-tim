@@ -86,11 +86,12 @@ const currentYear = today.getFullYear()
       page: page.toString(),
       limit: '1000',
     }
-    if (sekolahId) filters.sekolahId = sekolahId
+    if (sekolahId && sekolahId !== 'all') filters.sekolahId = sekolahId
     if (activeTab === 'akan_pensiun') filters.statusBup = 'akan_pensiun'
     if (activeTab === 'rekap') filters.statusPegawai = 'aktif'
+    if (filterTahun) filters.tahunPensiun = filterTahun
     loadPegawai(filters)
-  }, [page, sekolahId, activeTab, loadPegawai])
+  }, [page, sekolahId, activeTab, filterTahun, loadPegawai])
 
   useEffect(() => { loadSekolah() }, [loadSekolah])
   useEffect(() => { load() }, [load])

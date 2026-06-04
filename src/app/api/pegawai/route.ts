@@ -51,6 +51,12 @@ export async function GET(request: NextRequest) {
         params.push(statusBup)
       }
 
+      if (request.nextUrl.searchParams.get('tahunPensiun')) {
+        const tahunPensiun = parseInt(request.nextUrl.searchParams.get('tahunPensiun')!)
+        conditions.push('p.tahunPensiun = ?')
+        params.push(tahunPensiun)
+      }
+
       if (search) {
         conditions.push('(p.nama LIKE ? OR p.nik LIKE ? OR p.nip LIKE ? OR p.nuptk LIKE ? OR p.jabatan LIKE ?)')
         params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`)
