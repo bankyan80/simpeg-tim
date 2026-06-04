@@ -42,8 +42,8 @@ function getBUP(jenisPegawai: string | null): number {
 }
 
 function getSisaWaktuColor(sisa: number): string {
-  if (sisa < 0) return 'text-red-600 font-bold'
-  if (sisa >= 0 && sisa <= 0.5) return 'text-red-600 font-bold'
+  if (sisa < 0) return 'text-gray-500'
+  if (sisa <= 0.5) return 'text-red-600 font-bold'
   if (sisa <= 1) return 'text-amber-600 font-semibold'
   return 'text-blue-600'
 }
@@ -296,7 +296,7 @@ const currentYear = today.getFullYear()
                             <TableCell className="font-medium whitespace-nowrap">{formatDate(p.tanggalPensiun)}</TableCell>
                             <TableCell>
                               <span className={getSisaWaktuColor(p.sisaWaktu)}>
-                                {p.sisaWaktu <= 0 ? 'Sudah' : `${p.sisaWaktu} th`}
+                                {p.sisaWaktu < 0 ? 'Sudah' : p.sisaWaktu < 1 ? `${Math.round(p.sisaWaktu * 12)} bln` : `${Math.round(p.sisaWaktu)} th`}
                               </span>
                             </TableCell>
                             <TableCell>
