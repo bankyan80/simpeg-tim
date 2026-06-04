@@ -12,6 +12,7 @@ model User {
   nama          String
   email         String   @unique
   role          String   @default("operator") // admin_kecamatan | operator
+  password      String   @default("")
   sekolahId     String?
   status        String   @default("aktif") // aktif | nonaktif
   foto          String?

@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 // Lazy-load page components for better performance
 const PublicView = dynamic(() => import('@/components/simpeg/public-view'), { ssr: false })
@@ -233,7 +236,8 @@ function MainApp() {
     user, currentPage, setCurrentPage, sidebarOpen, setSidebarOpen,
     sidebarCollapsed, toggleSidebar,
     logout, notification, setNotification, dbStatus, validasiList,
-    loadValidasi, loadDashboard, loadSekolah
+    loadValidasi, loadDashboard, loadSekolah,
+    mustChangePassword, setMustChangePassword, changePassword
   } = useSimpegStore()
 
   const isAdmin = user?.role === 'admin_kecamatan'
@@ -256,6 +260,43 @@ function MainApp() {
       return () => clearTimeout(timer)
     }
   }, [notification, setNotification])
+
+  // Change Password dialog
+  const [cpwCurrent, setCpwCurrent] = useState('')
+  const [cpwNew, setCpwNew] = useState('')
+  const [cpwConfirm, setCpwConfirm] = useState('')
+  const [cpwError, setCpwError] = useState('')
+  const [cpwSubmitting, setCpwSubmitting] = useState(false)
+
+  const handleChangePassword = useCallback(async () => {
+    setCpwError('')
+    if (!cpwCurrent) { setCpwError('Password saat ini wajib diisi'); return }
+    if (!cpwNew) { setCpwError('Password baru wajib diisi'); return }
+    if (cpwNew.length < 6) { setCpwError('Password baru minimal 6 karakter'); return }
+    if (cpwNew !== cpwConfirm) { setCpwError('Konfirmasi password tidak cocok'); return }
+    if (!user) return
+    setCpwSubmitting(true)
+    try {
+      const ok = await changePassword(user.id, cpwCurrent, cpwNew)
+      if (ok) {
+        setCpwCurrent('')
+        setCpwNew('')
+        setCpwConfirm('')
+      }
+    } finally {
+      setCpwSubmitting(false)
+    }
+  }, [cpwCurrent, cpwNew, cpwConfirm, user, changePassword])
+
+  // Show change password dialog on mount if mustChangePassword
+  useEffect(() => {
+    if (mustChangePassword) {
+      setCpwError('')
+      setCpwCurrent('')
+      setCpwNew('')
+      setCpwConfirm('')
+    }
+  }, [mustChangePassword])
 
   // Handle browser back/forward
   useEffect(() => {
@@ -564,6 +605,40 @@ function MainApp() {
           {renderPage()}
         </main>
       </div>
+
+      {/* Change Password Dialog */}
+      <Dialog open={mustChangePassword} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="w-5 h-5 text-blue-600" /> Ubah Password Default
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-gray-500">
+            Anda masih menggunakan password default. Silakan ubah password untuk keamanan akun Anda.
+          </p>
+          <div className="space-y-4">
+            {cpwError && <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm">{cpwError}</div>}
+            <div>
+              <Label>Password Saat Ini</Label>
+              <Input type="password" value={cpwCurrent} onChange={e => setCpwCurrent(e.target.value)} placeholder="Masukkan password saat ini" />
+            </div>
+            <div>
+              <Label>Password Baru</Label>
+              <Input type="password" value={cpwNew} onChange={e => setCpwNew(e.target.value)} placeholder="Minimal 6 karakter" />
+            </div>
+            <div>
+              <Label>Konfirmasi Password Baru</Label>
+              <Input type="password" value={cpwConfirm} onChange={e => setCpwConfirm(e.target.value)} placeholder="Ulangi password baru" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleChangePassword} disabled={cpwSubmitting} className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white">
+              {cpwSubmitting ? 'Menyimpan...' : 'Ubah Password'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Notification Toast */}
       {notification && (

@@ -17,6 +17,9 @@ import type {
 interface SimpegStore {
   user: User | null;
   isAuthenticated: boolean;
+  mustChangePassword: boolean;
+  setMustChangePassword: (v: boolean) => void;
+  changePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<boolean>;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 
@@ -92,6 +95,34 @@ export const useSimpegStore = create<SimpegStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      mustChangePassword: false,
+
+      setMustChangePassword: (v: boolean) => set({ mustChangePassword: v }),
+
+      changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+        try {
+          const res = await fetch('/api/auth/change-password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, currentPassword, newPassword }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Gagal mengubah password' }));
+            throw new Error(err.error || 'Gagal mengubah password');
+          }
+          set({ mustChangePassword: false });
+          set({ notification: { type: 'success', message: 'Password berhasil diubah' } });
+          return true;
+        } catch (error) {
+          set({
+            notification: {
+              type: 'error',
+              message: error instanceof Error ? error.message : 'Gagal mengubah password',
+            },
+          });
+          return false;
+        }
+      },
 
       login: async (username: string, password: string) => {
         set({ loading: true });
@@ -106,9 +137,11 @@ export const useSimpegStore = create<SimpegStore>()(
             throw new Error(err.error || 'Login gagal');
           }
           const data = await res.json();
+          const userData = data.data || data.user;
           set({
-            user: data.data || data.user,
+            user: userData,
             isAuthenticated: true,
+            mustChangePassword: userData.mustChangePassword === true,
             loading: false,
           });
           set({ notification: { type: 'success', message: 'Login berhasil' } });
