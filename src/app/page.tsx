@@ -108,8 +108,15 @@ function LoginPage() {
       <div className="w-full max-w-md relative z-10">
         {/* Branding */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-600 to-blue-900 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/40">
-            <Building2 className="w-10 h-10 text-white" />
+          <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+            <Image
+              src="/logokab.png"
+              alt="Logo Kabupaten Cirebon"
+              width={80}
+              height={80}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-white">SIMPEG</h1>
           <p className="text-blue-300 font-medium">Sistem Informasi Manajemen Pegawai</p>
@@ -249,6 +256,16 @@ function MainApp() {
       return () => clearTimeout(timer)
     }
   }, [notification, setNotification])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const page = (e.state as { page?: string })?.page
+      if (page) setCurrentPage(page)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [setCurrentPage])
 
   // Close sidebar on page change (mobile)
   const handlePageChange = useCallback((page: string) => {
