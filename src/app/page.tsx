@@ -9,7 +9,7 @@ import {
   CalendarClock, FileBarChart, History, Building2, Settings, User,
   LogOut, Menu, X, Bell, Shield, Map, School, FileUp, Send, Printer,
   BookOpen, Loader2, Eye, EyeOff, Lock, LogIn, AlertCircle,
-  ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft
+  ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, RefreshCw
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -267,6 +267,56 @@ function MainApp() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [setCurrentPage])
 
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true)
+    const s = useSimpegStore.getState()
+    try {
+      switch (currentPage) {
+        case 'dashboard':
+          await s.loadDashboard()
+          await s.loadSekolah()
+          await s.loadValidasi({ statusValidasi: 'pending' })
+          break
+        case 'pegawai':
+        case 'mapping-pegawai':
+        case 'riwayat-pegawai':
+        case 'dokumen-pegawai':
+        case 'bup':
+        case 'pegawai-detail':
+          await s.loadPegawai()
+          break
+        case 'absensi':
+          await s.loadAbsensi()
+          break
+        case 'validasi':
+        case 'pengajuan':
+          await s.loadValidasi()
+          break
+        case 'mutasi':
+          await s.loadMutasi()
+          break
+        case 'laporan':
+        case 'cetak':
+          await s.loadPegawai()
+          break
+        case 'log-aktivitas':
+          await s.loadLog()
+          break
+        case 'sekolah':
+        case 'profil':
+          await s.loadSekolah()
+          break
+        case 'pengaturan':
+          await s.loadPengaturan()
+          break
+      }
+    } finally {
+      setRefreshing(false)
+    }
+  }, [currentPage])
+
   // Close sidebar on page change (mobile)
   const handlePageChange = useCallback((page: string) => {
     setCurrentPage(page)
@@ -465,9 +515,19 @@ function MainApp() {
                 {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
               </button>
               <div>
-                <h2 className="font-semibold text-gray-900">
-                  {pageTitles[currentPage] || 'Dashboard'}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-gray-900">
+                    {pageTitles[currentPage] || 'Dashboard'}
+                  </h2>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    className="p-1.5 text-gray-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition disabled:opacity-50"
+                    title="Refresh data"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
                 {user?.sekolah && !isAdmin && (
                   <p className="text-xs text-gray-500">{user.sekolah.namaSekolah}</p>
                 )}
