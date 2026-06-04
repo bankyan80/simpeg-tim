@@ -1,17 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Hardcoded school data matching the seed data
-const SEKOLAH_DATA = [
-  { npsn: '2010001', namaSekolah: 'SDN Lemahabang 01', jenjang: 'SD', kecamatan: 'Lemahabang', desa: 'Lemahabang' },
-  { npsn: '2010002', namaSekolah: 'SDN Lemahabang 02', jenjang: 'SD', kecamatan: 'Lemahabang', desa: 'Lemahabang' },
-  { npsn: '2010003', namaSekolah: 'SDN Cipanas 01', jenjang: 'SD', kecamatan: 'Lemahabang', desa: 'Cipanas' },
-  { npsn: '2010004', namaSekolah: 'SDN Cipanas 02', jenjang: 'SD', kecamatan: 'Lemahabang', desa: 'Cipanas' },
-  { npsn: '2010005', namaSekolah: 'SDN Palalangan 01', jenjang: 'SD', kecamatan: 'Lemahabang', desa: 'Palalangan' },
-  { npsn: '2020001', namaSekolah: 'TKN Lemahabang 01', jenjang: 'TK', kecamatan: 'Lemahabang', desa: 'Lemahabang' },
-  { npsn: '2020002', namaSekolah: 'TKN Cipanas 01', jenjang: 'TK', kecamatan: 'Lemahabang', desa: 'Cipanas' },
-  { npsn: '2030001', namaSekolah: 'KBN Melati Lemahabang', jenjang: 'KB/PAUD', kecamatan: 'Lemahabang', desa: 'Lemahabang' },
-  { npsn: '2030002', namaSekolah: 'PAUDN Cempaka Cipanas', jenjang: 'KB/PAUD', kecamatan: 'Lemahabang', desa: 'Cipanas' },
-]
+import { queryOne } from '@/lib/db-sqlite'
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,7 +32,12 @@ export async function POST(request: NextRequest) {
 
     // Check operator credentials (username = NPSN, password = 123456)
     if (password === '123456') {
-      const sekolah = SEKOLAH_DATA.find(s => s.npsn === username)
+      const sekolah = queryOne<{
+        id: string; npsn: string; namaSekolah: string; jenjang: string;
+        kecamatan: string; desa: string; alamat: string | null;
+        kepalaSekolah: string | null; status: string
+      }>('SELECT id, npsn, namaSekolah, jenjang, kecamatan, desa, alamat, kepalaSekolah, status FROM Sekolah WHERE npsn = ?', [username])
+
       if (!sekolah) {
         return NextResponse.json(
           { success: false, error: 'Sekolah dengan NPSN tersebut tidak ditemukan' },
@@ -58,19 +51,19 @@ export async function POST(request: NextRequest) {
           nama: `Operator ${sekolah.namaSekolah}`,
           email: `operator@${sekolah.npsn}.simpeg.id`,
           role: 'operator',
-          sekolahId: `sekolah-${sekolah.npsn}`,
+          sekolahId: sekolah.id,
           status: 'aktif',
           foto: null,
           sekolah: {
-            id: `sekolah-${sekolah.npsn}`,
+            id: sekolah.id,
             npsn: sekolah.npsn,
             namaSekolah: sekolah.namaSekolah,
             jenjang: sekolah.jenjang,
             kecamatan: sekolah.kecamatan,
             desa: sekolah.desa,
-            alamat: null,
-            kepalaSekolah: null,
-            status: 'aktif',
+            alamat: sekolah.alamat,
+            kepalaSekolah: sekolah.kepalaSekolah,
+            status: sekolah.status,
           },
         },
       })
@@ -115,7 +108,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const sekolah = SEKOLAH_DATA.find(s => s.npsn === username)
+    const sekolah = queryOne<{
+      id: string; npsn: string; namaSekolah: string; jenjang: string;
+      kecamatan: string; desa: string; alamat: string | null;
+      kepalaSekolah: string | null; status: string
+    }>('SELECT id, npsn, namaSekolah, jenjang, kecamatan, desa, alamat, kepalaSekolah, status FROM Sekolah WHERE npsn = ?', [username])
+
     if (sekolah) {
       return NextResponse.json({
         success: true,
@@ -124,18 +122,18 @@ export async function GET(request: NextRequest) {
           nama: `Operator ${sekolah.namaSekolah}`,
           email: `operator@${sekolah.npsn}.simpeg.id`,
           role: 'operator',
-          sekolahId: `sekolah-${sekolah.npsn}`,
+          sekolahId: sekolah.id,
           status: 'aktif',
           sekolah: {
-            id: `sekolah-${sekolah.npsn}`,
+            id: sekolah.id,
             npsn: sekolah.npsn,
             namaSekolah: sekolah.namaSekolah,
             jenjang: sekolah.jenjang,
             kecamatan: sekolah.kecamatan,
             desa: sekolah.desa,
-            alamat: null,
-            kepalaSekolah: null,
-            status: 'aktif',
+            alamat: sekolah.alamat,
+            kepalaSekolah: sekolah.kepalaSekolah,
+            status: sekolah.status,
           },
         },
       })
