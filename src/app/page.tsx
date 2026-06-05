@@ -420,7 +420,7 @@ function MainApp() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 bg-gradient-to-b from-[#0a1628] to-[#071225] border-r border-blue-900/50 transform transition-all duration-300 ease-in-out flex flex-col ${
+      <aside className={`fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-[#0a1628] to-[#071225] border-r border-blue-900/50 transform transition-all duration-300 ease-in-out flex flex-col ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${
         sidebarCollapsed ? 'w-[68px]' : 'w-64'
@@ -537,7 +537,7 @@ function MainApp() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 ${sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'}`}>
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 bg-white border-b border-blue-800/20 px-4 py-3 border-t-2 border-t-blue-900">
           <div className="flex items-center justify-between">
