@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execute } from '@/lib/db-sqlite'
+import { execute } from '@/lib/db-turso'
 import crypto from 'crypto'
 
 export async function DELETE(
@@ -11,10 +11,10 @@ export async function DELETE(
     const userId = request.nextUrl.searchParams.get('userId')
     const now = new Date().toISOString()
 
-    execute('DELETE FROM DokumenPegawai WHERE id = ?', [id])
+    await execute('DELETE FROM DokumenPegawai WHERE id = ?', [id])
 
     if (userId) {
-      execute(
+      await execute(
         `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (?, ?, 'hapus', 'pegawai', ?, ?)`,
         [crypto.randomUUID(), userId, 'Menghapus dokumen pegawai', now]
       )

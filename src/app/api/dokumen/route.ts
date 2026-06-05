@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, execute } from '@/lib/db-sqlite'
+import { query, execute } from '@/lib/db-turso'
 import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
       const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
 
-      const data = query(
+      const data = await query(
         `SELECT d.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik,
                 s.namaSekolah as s_namaSekolah
          FROM DokumenPegawai d
@@ -76,13 +76,13 @@ export async function POST(request: NextRequest) {
     const id = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    execute(
+    await execute(
       `INSERT INTO DokumenPegawai (id, pegawaiId, jenisDokumen, namaFile, urlFile, ukuranFile, uploadedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [id, pegawaiId, jenisDokumen, namaFile || null, urlFile || null, ukuranFile || null, now]
     )
 
     if (userId) {
-      execute(
+      await execute(
         `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (?, ?, 'tambah', 'pegawai', ?, ?)`,
         [crypto.randomUUID(), userId, `Menambahkan dokumen ${jenisDokumen}`, now]
       )

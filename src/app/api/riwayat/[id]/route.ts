@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execute } from '@/lib/db-sqlite'
+import { execute } from '@/lib/db-turso'
 import crypto from 'crypto'
 
 const TABLE_MAP: Record<string, string> = {
@@ -28,10 +28,10 @@ export async function DELETE(
       )
     }
 
-    execute(`DELETE FROM ${table} WHERE id = ?`, [id])
+    await execute(`DELETE FROM ${table} WHERE id = ?`, [id])
 
     if (userId) {
-      execute(
+      await execute(
         `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (?, ?, 'hapus', 'pegawai', ?, ?)`,
         [crypto.randomUUID(), userId, `Menghapus riwayat ${jenis}`, now]
       )

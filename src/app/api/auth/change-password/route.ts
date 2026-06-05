@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { execute, queryOne } from '@/lib/db-sqlite'
+import { execute, queryOne } from '@/lib/db-turso'
 import { hashPassword, verifyPassword } from '@/lib/password'
 
 export async function PUT(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify current password
-    const user = queryOne<{ id: string; password: string }>(
+    const user = await queryOne<{ id: string; password: string }>(
       'SELECT id, password FROM User WHERE id = ?',
       [userId]
     )
@@ -43,7 +43,7 @@ export async function PUT(request: NextRequest) {
 
     // Update password
     const hashed = hashPassword(newPassword)
-    execute('UPDATE User SET password = ? WHERE id = ?', [hashed, userId])
+    await execute('UPDATE User SET password = ? WHERE id = ?', [hashed, userId])
 
     return NextResponse.json({
       success: true,

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, execute, count } from '@/lib/db-sqlite'
+import { query, queryOne, execute, count } from '@/lib/db-turso'
 
 interface AbsensiRow {
   id: string
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     try {
-      const absensiRows = query<AbsensiRow>(
+      const absensiRows = await query<AbsensiRow>(
         `SELECT
           a.id, a.tanggal, a.pegawaiId, a.nip, a.namaPegawai, a.unitKerja,
           a.statusPegawai, a.jamMasuk, a.jamKeluar, a.keterangan,
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
         [...params, limit, skip]
       )
 
-      const total = count('AbsensiPegawai', conditions.length > 0 ? conditions.join(' AND ').replace(/a\./g, '') : undefined, conditions.length > 0 ? params : undefined)
+      const total = await count('AbsensiPegawai', conditions.length > 0 ? conditions.join(' AND ').replace(/a\./g, '') : undefined, conditions.length > 0 ? params : undefined)
 
       const absensi = absensiRows.map(transformAbsensiRow)
 
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Validate: one pegawai can only have one absensi per tanggal
-      const existingAbsensi = queryOne<{ id: string }>(
+      const existingAbsensi = await queryOne<{ id: string }>(
         "SELECT id FROM AbsensiPegawai WHERE pegawaiId = ? AND date(tanggal) = date(?)",
         [pegawaiId, tanggal]
       )
@@ -215,7 +215,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Get pegawai data to auto-fill fields
-      const pegawai = queryOne<{
+      const pegawai = await queryOne<{
         id: string
         nama: string
         nip: string | null
@@ -238,12 +238,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const idResult = queryOne<{ id: string }>(
+      const idResult = await queryOne<{ id: string }>(
         "SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))) as id"
       )
       const id = idResult!.id
 
-      execute(
+      await execute(
         `INSERT INTO AbsensiPegawai (id, tanggal, pegawaiId, nip, namaPegawai, unitKerja, statusPegawai, jamMasuk, jamKeluar, keterangan, sekolahId, inputBy, statusValidasi, createdAt, updatedAt)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'), datetime('now'))`,
         [
@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
         ]
       )
 
-      const row = queryOne<AbsensiRow>(
+      const row = await queryOne<AbsensiRow>(
         `SELECT
           a.id, a.tanggal, a.pegawaiId, a.nip, a.namaPegawai, a.unitKerja,
           a.statusPegawai, a.jamMasuk, a.jamKeluar, a.keterangan,
@@ -286,10 +286,10 @@ export async function POST(request: NextRequest) {
 
       // Create log aktivitas
       if (userId) {
-        const logIdResult = queryOne<{ id: string }>(
+        const logIdResult = await queryOne<{ id: string }>(
           "SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))) as id"
         )
-        execute(
+        await execute(
           `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt)
            VALUES (?, ?, 'tambah', 'absensi', ?, datetime('now'))`,
           [logIdResult!.id, userId, `Menambah absensi: ${pegawai.nama} tanggal ${tanggal}`]

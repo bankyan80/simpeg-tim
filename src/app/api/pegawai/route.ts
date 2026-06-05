@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, count, execute } from '@/lib/db-sqlite'
+import { query, queryOne, count, execute } from '@/lib/db-turso'
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       // Resolve NPSN to sekolahId
       let effectiveSekolahId = sekolahId
       if (npsn && !sekolahId) {
-        const sekolah = queryOne<{ id: string }>('SELECT id FROM Sekolah WHERE npsn = ?', [npsn])
+        const sekolah = await queryOne<{ id: string }>('SELECT id FROM Sekolah WHERE npsn = ?', [npsn])
         if (sekolah) {
           effectiveSekolahId = sekolah.id
         }
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
       const skip = (page - 1) * limit
 
-      const pegawai = query(
+      const pegawai = await query(
         `SELECT p.*, s.id as s_id, s.namaSekolah as s_namaSekolah, s.npsn as s_npsn, s.jenjang as s_jenjang
          FROM Pegawai p
          LEFT JOIN Sekolah s ON p.sekolahId = s.id
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      const totalResult = queryOne<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM Pegawai p ${whereClause}`, params)
+      const totalResult = await queryOne<{ cnt: number }>(`SELECT COUNT(*) as cnt FROM Pegawai p ${whereClause}`, params)
       const total = totalResult?.cnt ?? 0
 
       return NextResponse.json({
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Validate NIK unique
-      const existingNik = queryOne('SELECT id FROM Pegawai WHERE nik = ?', [nik])
+      const existingNik = await queryOne('SELECT id FROM Pegawai WHERE nik = ?', [nik])
       if (existingNik) {
         return NextResponse.json(
           { success: false, error: 'NIK sudah terdaftar' },
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
       // Validate NIP unique if provided
       if (nip) {
-        const existingNip = queryOne('SELECT id FROM Pegawai WHERE nip = ?', [nip])
+        const existingNip = await queryOne('SELECT id FROM Pegawai WHERE nip = ?', [nip])
         if (existingNip) {
           return NextResponse.json(
             { success: false, error: 'NIP sudah terdaftar' },
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      execute(
+      await execute(
         `INSERT INTO Pegawai (id, sekolahId, nik, nip, nuptk, nama, tempatLahir, tanggalLahir, jenisKelamin, agama, alamat, noHp, email, jabatan, jenisPegawai, statusKepegawaian, statusPegawai, pangkat, golongan, pendidikanTerakhir, jurusan, sertifikasi, nomorSertifikat, bidangSertifikasi, tahunSertifikasi, nrg, statusTpg, tmtTugas, tmtSekolah, tmtJabatan, tmtPangkat, masaKerjaTahun, masaKerjaBulan, tahunPensiun, statusBup, keteranganBup, createdAt, updatedAt)
          VALUES (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'aktif', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
         [
@@ -200,11 +200,11 @@ export async function POST(request: NextRequest) {
       )
 
       // Get the created pegawai with sekolah info
-      const newPegawai = queryOne<Record<string, unknown>>('SELECT p.*, s.id as s_id, s.namaSekolah as s_namaSekolah, s.npsn as s_npsn, s.jenjang as s_jenjang FROM Pegawai p LEFT JOIN Sekolah s ON p.sekolahId = s.id WHERE p.nik = ?', [nik])
+      const newPegawai = await queryOne<Record<string, unknown>>('SELECT p.*, s.id as s_id, s.namaSekolah as s_namaSekolah, s.npsn as s_npsn, s.jenjang as s_jenjang FROM Pegawai p LEFT JOIN Sekolah s ON p.sekolahId = s.id WHERE p.nik = ?', [nik])
 
       // Create log aktivitas
       if (userId) {
-        execute(
+        await execute(
           `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))), ?, 'tambah', 'pegawai', ?, datetime('now'))`,
           [userId, `Menambah pegawai baru: ${nama} (NIK: ${nik})`]
         )

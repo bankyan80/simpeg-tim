@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { queryOne } from '@/lib/db-sqlite'
+import { queryOne } from '@/lib/db-turso'
 import { verifyPassword, DEFAULT_PASSWORD, ADMIN_PASSWORD } from '@/lib/password'
 
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     // Check admin credentials from DB
     if (username === 'admin-kepeg') {
-      const admin = queryOne<{ id: string; nama: string; email: string; password: string; status: string }>(
+      const admin = await queryOne<{ id: string; nama: string; email: string; password: string; status: string }>(
         "SELECT id, nama, email, password, status FROM User WHERE role = 'admin_kecamatan' LIMIT 1"
       )
       if (!admin || !verifyPassword(password, admin.password)) {
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check operator credentials (username = NPSN)
-    const sekolah = queryOne<{
+    const sekolah = await queryOne<{
       id: string; npsn: string; namaSekolah: string; jenjang: string;
       kecamatan: string; desa: string; alamat: string | null;
       kepalaSekolah: string | null; status: string
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find operator user for this school
-    const operator = queryOne<{ id: string; nama: string; email: string; password: string; status: string }>(
+    const operator = await queryOne<{ id: string; nama: string; email: string; password: string; status: string }>(
       'SELECT id, nama, email, password, status FROM User WHERE sekolahId = ? AND role = ? LIMIT 1',
       [sekolah.id, 'operator']
     )
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (username === 'admin-kepeg') {
-      const admin = queryOne<{ id: string; nama: string; email: string }>(
+      const admin = await queryOne<{ id: string; nama: string; email: string }>(
         "SELECT id, nama, email FROM User WHERE role = 'admin_kecamatan' LIMIT 1"
       )
       if (!admin) {
@@ -127,14 +127,14 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const sekolah = queryOne<{ id: string; npsn: string; namaSekolah: string; jenjang: string; kecamatan: string; desa: string; kepalaSekolah: string | null; status: string }>(
+    const sekolah = await queryOne<{ id: string; npsn: string; namaSekolah: string; jenjang: string; kecamatan: string; desa: string; kepalaSekolah: string | null; status: string }>(
       'SELECT id, npsn, namaSekolah, jenjang, kecamatan, desa, kepalaSekolah, status FROM Sekolah WHERE npsn = ?', [username]
     )
     if (!sekolah) {
       return NextResponse.json({ success: false, error: 'User tidak ditemukan' }, { status: 404 })
     }
 
-    const operator = queryOne<{ id: string; nama: string; email: string; status: string }>(
+    const operator = await queryOne<{ id: string; nama: string; email: string; status: string }>(
       'SELECT id, nama, email, status FROM User WHERE sekolahId = ? AND role = ? LIMIT 1', [sekolah.id, 'operator']
     )
     if (!operator) {

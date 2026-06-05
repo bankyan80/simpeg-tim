@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, execute } from '@/lib/db-sqlite'
+import { query, queryOne, execute } from '@/lib/db-turso'
 
 interface SekolahRow {
   id: string
@@ -65,7 +65,7 @@ export async function GET(
     const { id } = await params
 
     try {
-      const pegawai = queryOne<PegawaiRow>(
+      const pegawai = await queryOne<PegawaiRow>(
         'SELECT * FROM Pegawai WHERE id = ?',
         [id]
       )
@@ -77,42 +77,42 @@ export async function GET(
         )
       }
 
-      const sekolah = queryOne<SekolahRow>(
+      const sekolah = await queryOne<SekolahRow>(
         'SELECT * FROM Sekolah WHERE id = ?',
         [pegawai.sekolahId]
       )
 
-      const riwayatPendidikan = query(
+      const riwayatPendidikan = await query(
         'SELECT * FROM RiwayatPendidikan WHERE pegawaiId = ? ORDER BY tahunLulus DESC',
         [id]
       )
 
-      const riwayatJabatan = query(
+      const riwayatJabatan = await query(
         'SELECT * FROM RiwayatJabatan WHERE pegawaiId = ? ORDER BY tmtJabatan DESC',
         [id]
       )
 
-      const riwayatPangkat = query(
+      const riwayatPangkat = await query(
         'SELECT * FROM RiwayatPangkat WHERE pegawaiId = ? ORDER BY tmtPangkat DESC',
         [id]
       )
 
-      const riwayatSertifikasi = query(
+      const riwayatSertifikasi = await query(
         'SELECT * FROM RiwayatSertifikasi WHERE pegawaiId = ? ORDER BY tahunSertifikasi DESC',
         [id]
       )
 
-      const riwayatMutasi = query(
+      const riwayatMutasi = await query(
         'SELECT * FROM RiwayatMutasi WHERE pegawaiId = ? ORDER BY tanggalMutasi DESC',
         [id]
       )
 
-      const riwayatPelatihan = query(
+      const riwayatPelatihan = await query(
         'SELECT * FROM RiwayatPelatihan WHERE pegawaiId = ? ORDER BY tahunPelatihan DESC',
         [id]
       )
 
-      const dokumenPegawai = query(
+      const dokumenPegawai = await query(
         'SELECT * FROM DokumenPegawai WHERE pegawaiId = ? ORDER BY uploadedAt DESC',
         [id]
       )
@@ -196,7 +196,7 @@ export async function PUT(
 
     try {
       // Check if pegawai exists
-      const existing = queryOne<PegawaiRow>(
+      const existing = await queryOne<PegawaiRow>(
         'SELECT * FROM Pegawai WHERE id = ?',
         [id]
       )
@@ -209,7 +209,7 @@ export async function PUT(
 
       // Validate NIK unique (excluding current)
       if (nik && nik !== existing.nik) {
-        const existingNik = queryOne<{ id: string }>(
+        const existingNik = await queryOne<{ id: string }>(
           'SELECT id FROM Pegawai WHERE nik = ?',
           [nik]
         )
@@ -223,7 +223,7 @@ export async function PUT(
 
       // Validate NIP unique if provided (excluding current)
       if (nip && nip !== existing.nip) {
-        const existingNip = queryOne<{ id: string }>(
+        const existingNip = await queryOne<{ id: string }>(
           'SELECT id FROM Pegawai WHERE nip = ?',
           [nip]
         )
@@ -302,18 +302,18 @@ export async function PUT(
 
       setClauses.push("updatedAt = datetime('now')")
 
-      execute(
+      await execute(
         `UPDATE Pegawai SET ${setClauses.join(', ')} WHERE id = ?`,
         [...setParams, id]
       )
 
       // Fetch updated record with sekolah
-      const updatedPegawai = queryOne<PegawaiRow>(
+      const updatedPegawai = await queryOne<PegawaiRow>(
         'SELECT * FROM Pegawai WHERE id = ?',
         [id]
       )
 
-      const updatedSekolah = updatedPegawai ? queryOne<{
+      const updatedSekolah = updatedPegawai ? await queryOne<{
         id: string
         namaSekolah: string
         npsn: string
@@ -330,10 +330,10 @@ export async function PUT(
 
       // Create log aktivitas
       if (userId && updatedPegawai) {
-        const logIdResult = queryOne<{ id: string }>(
+        const logIdResult = await queryOne<{ id: string }>(
           "SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))) as id"
         )
-        execute(
+        await execute(
           `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt)
            VALUES (?, ?, 'edit', 'pegawai', ?, datetime('now'))`,
           [logIdResult!.id, userId, `Mengedit data pegawai: ${updatedPegawai.nama} (NIK: ${updatedPegawai.nik})`]
@@ -369,7 +369,7 @@ export async function DELETE(
     const userId = request.nextUrl.searchParams.get('userId')
 
     try {
-      const existing = queryOne<PegawaiRow>(
+      const existing = await queryOne<PegawaiRow>(
         'SELECT * FROM Pegawai WHERE id = ?',
         [id]
       )
@@ -381,22 +381,22 @@ export async function DELETE(
       }
 
       // Soft delete - set statusPegawai to tidak_aktif
-      execute(
+      await execute(
         "UPDATE Pegawai SET statusPegawai = 'tidak_aktif', updatedAt = datetime('now') WHERE id = ?",
         [id]
       )
 
-      const pegawai = queryOne<PegawaiRow>(
+      const pegawai = await queryOne<PegawaiRow>(
         'SELECT * FROM Pegawai WHERE id = ?',
         [id]
       )
 
       // Create log aktivitas
       if (userId) {
-        const logIdResult = queryOne<{ id: string }>(
+        const logIdResult = await queryOne<{ id: string }>(
           "SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))) as id"
         )
-        execute(
+        await execute(
           `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt)
            VALUES (?, ?, 'hapus', 'pegawai', ?, datetime('now'))`,
           [logIdResult!.id, userId, `Menonaktifkan pegawai: ${existing.nama} (NIK: ${existing.nik})`]

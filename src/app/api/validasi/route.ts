@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, execute, count } from '@/lib/db-sqlite'
+import { query, queryOne, execute, count } from '@/lib/db-turso'
 
 interface ValidasiRow {
   id: string
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     try {
-      const validasiRows = query<ValidasiRow>(
+      const validasiRows = await query<ValidasiRow>(
         `SELECT
           v.id, v.pegawaiId, v.sekolahId, v.jenisPengajuan, v.statusValidasi,
           v.catatanAdmin, v.dataPerubahan, v.tanggalPengajuan, v.tanggalValidasi,
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         [...params, limit, skip]
       )
 
-      const total = count('ValidasiData', conditions.length > 0 ? conditions.join(' AND ').replace(/v\./g, '') : undefined, conditions.length > 0 ? params : undefined)
+      const total = await count('ValidasiData', conditions.length > 0 ? conditions.join(' AND ').replace(/v\./g, '') : undefined, conditions.length > 0 ? params : undefined)
 
       const validasi = validasiRows.map(transformValidasiRow)
 
@@ -172,18 +172,18 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const idResult = queryOne<{ id: string }>(
+      const idResult = await queryOne<{ id: string }>(
         "SELECT lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))) as id"
       )
       const id = idResult!.id
 
-      execute(
+      await execute(
         `INSERT INTO ValidasiData (id, pegawaiId, sekolahId, jenisPengajuan, statusValidasi, dataPerubahan, tanggalPengajuan, createdAt, updatedAt)
          VALUES (?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'), datetime('now'))`,
         [id, pegawaiId || null, sekolahId || null, jenisPengajuan, dataPerubahan ? JSON.stringify(dataPerubahan) : null]
       )
 
-      const row = queryOne<ValidasiRow>(
+      const row = await queryOne<ValidasiRow>(
         `SELECT
           v.id, v.pegawaiId, v.sekolahId, v.jenisPengajuan, v.statusValidasi,
           v.catatanAdmin, v.dataPerubahan, v.tanggalPengajuan, v.tanggalValidasi,

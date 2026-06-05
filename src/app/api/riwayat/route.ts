@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, execute } from '@/lib/db-sqlite'
+import { query, execute } from '@/lib/db-turso'
 import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       let data: unknown[] = []
 
       if (jenis === 'jabatan') {
-        data = query(
+        data = await query(
           `SELECT r.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik, p.jenisPegawai as p_jenisPegawai
            FROM RiwayatJabatan r
            LEFT JOIN Pegawai p ON r.pegawaiId = p.id
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
           params
         )
       } else if (jenis === 'mutasi') {
-        data = query(
+        data = await query(
           `SELECT r.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik
            FROM RiwayatMutasi r
            LEFT JOIN Pegawai p ON r.pegawaiId = p.id
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           params
         )
       } else if (jenis === 'pelatihan') {
-        data = query(
+        data = await query(
           `SELECT r.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik
            FROM RiwayatPelatihan r
            LEFT JOIN Pegawai p ON r.pegawaiId = p.id
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
           params
         )
       } else if (jenis === 'pendidikan') {
-        data = query(
+        data = await query(
           `SELECT r.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik
            FROM RiwayatPendidikan r
            LEFT JOIN Pegawai p ON r.pegawaiId = p.id
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
           params
         )
       } else if (jenis === 'pangkat') {
-        data = query(
+        data = await query(
           `SELECT r.*, p.nama as p_nama, p.nip as p_nip, p.nik as p_nik
            FROM RiwayatPangkat r
            LEFT JOIN Pegawai p ON r.pegawaiId = p.id
@@ -116,13 +116,13 @@ export async function POST(request: NextRequest) {
       if (!jabatan) {
         return NextResponse.json({ success: false, error: 'Jabatan wajib diisi' }, { status: 400 })
       }
-      execute(
+      await execute(
         `INSERT INTO RiwayatJabatan (id, pegawaiId, jabatan, unitKerja, tmtJabatan, nomorSk, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, pegawaiId, jabatan, unitKerja || null, tmtJabatan || null, nomorSk || null, now, now]
       )
     } else if (jenis === 'mutasi') {
       const { sekolahAsal, sekolahTujuan, tanggalMutasi, nomorSk, keterangan } = body
-      execute(
+      await execute(
         `INSERT INTO RiwayatMutasi (id, pegawaiId, sekolahAsal, sekolahTujuan, tanggalMutasi, nomorSk, keterangan, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, pegawaiId, sekolahAsal || null, sekolahTujuan || null, tanggalMutasi || null, nomorSk || null, keterangan || null, now, now]
       )
@@ -131,19 +131,19 @@ export async function POST(request: NextRequest) {
       if (!namaPelatihan) {
         return NextResponse.json({ success: false, error: 'Nama pelatihan wajib diisi' }, { status: 400 })
       }
-      execute(
+      await execute(
         `INSERT INTO RiwayatPelatihan (id, pegawaiId, namaPelatihan, penyelenggara, tahunPelatihan, nomorSertifikat, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, pegawaiId, namaPelatihan, penyelenggara || null, tahunPelatihan || null, nomorSertifikat || null, now, now]
       )
     } else if (jenis === 'pendidikan') {
       const { jenjang, jurusan, namaSekolahKampus, tahunLulus, nomorIjazah } = body
-      execute(
+      await execute(
         `INSERT INTO RiwayatPendidikan (id, pegawaiId, jenjang, jurusan, namaSekolahKampus, tahunLulus, nomorIjazah, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, pegawaiId, jenjang || null, jurusan || null, namaSekolahKampus || null, tahunLulus || null, nomorIjazah || null, now, now]
       )
     } else if (jenis === 'pangkat') {
       const { pangkat, golongan, tmtPangkat, nomorSk } = body
-      execute(
+      await execute(
         `INSERT INTO RiwayatPangkat (id, pegawaiId, pangkat, golongan, tmtPangkat, nomorSk, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [id, pegawaiId, pangkat || null, golongan || null, tmtPangkat || null, nomorSk || null, now, now]
       )
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
 
     // Log activity
     if (userId) {
-      execute(
+      await execute(
         `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (?, ?, 'tambah', 'pegawai', ?, ?)`,
         [crypto.randomUUID(), userId, `Menambahkan riwayat ${jenis}`, now]
       )

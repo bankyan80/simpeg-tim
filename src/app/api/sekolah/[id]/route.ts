@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, execute } from '@/lib/db-sqlite'
+import { query, queryOne, execute } from '@/lib/db-turso'
 
 export async function GET(
   request: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
     const { id } = await params
 
     try {
-      const sekolah = queryOne<Record<string, unknown>>(
+      const sekolah = await queryOne<Record<string, unknown>>(
         `SELECT s.*, COUNT(p.id) as pegawaiCount, COUNT(u.id) as usersCount
          FROM Sekolah s
          LEFT JOIN Pegawai p ON p.sekolahId = s.id
@@ -61,7 +61,7 @@ export async function PUT(
     const { npsn, namaSekolah, jenjang, kecamatan, desa, alamat, kepalaSekolah } = body
 
     try {
-      const existing = queryOne('SELECT * FROM Sekolah WHERE id = ?', [id])
+      const existing = await queryOne('SELECT * FROM Sekolah WHERE id = ?', [id])
       if (!existing) {
         return NextResponse.json(
           { success: false, error: 'Sekolah tidak ditemukan' },
@@ -85,13 +85,13 @@ export async function PUT(
         updates.push("updatedAt = datetime('now')")
         updateParams.push(id)
 
-        execute(
+        await execute(
           `UPDATE Sekolah SET ${updates.join(', ')} WHERE id = ?`,
           updateParams
         )
       }
 
-      const updated = queryOne('SELECT * FROM Sekolah WHERE id = ?', [id])
+      const updated = await queryOne('SELECT * FROM Sekolah WHERE id = ?', [id])
 
       return NextResponse.json({
         success: true,
@@ -121,7 +121,7 @@ export async function DELETE(
     const { id } = await params
 
     try {
-      const existing = queryOne<{ id: string }>('SELECT id FROM Sekolah WHERE id = ?', [id])
+      const existing = await queryOne<{ id: string }>('SELECT id FROM Sekolah WHERE id = ?', [id])
       if (!existing) {
         return NextResponse.json(
           { success: false, error: 'Sekolah tidak ditemukan' },
@@ -129,7 +129,7 @@ export async function DELETE(
         )
       }
 
-      const pegawaiCount = queryOne<{ cnt: number }>('SELECT COUNT(*) as cnt FROM Pegawai WHERE sekolahId = ?', [id])
+      const pegawaiCount = await queryOne<{ cnt: number }>('SELECT COUNT(*) as cnt FROM Pegawai WHERE sekolahId = ?', [id])
       if (pegawaiCount && pegawaiCount.cnt > 0) {
         return NextResponse.json(
           { success: false, error: 'Tidak dapat menghapus sekolah yang masih memiliki pegawai' },
@@ -137,7 +137,7 @@ export async function DELETE(
         )
       }
 
-      execute('DELETE FROM Sekolah WHERE id = ?', [id])
+      await execute('DELETE FROM Sekolah WHERE id = ?', [id])
 
       return NextResponse.json({
         success: true,

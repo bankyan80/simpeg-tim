@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, queryOne, count } from '@/lib/db-sqlite'
+import { query, queryOne, count } from '@/lib/db-turso'
 
 // Hardcoded school data as fallback
 const HARDCODED_SEKOLAH = [
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       const pegawaiWhere = sekolahId ? `WHERE statusPegawai = 'aktif' AND sekolahId = ?` : `WHERE statusPegawai = 'aktif'`
       const pegawaiParams = sekolahId ? [sekolahId] : []
 
-      const allPegawai = query<{
+      const allPegawai = await query<{
         jenisPegawai: string | null
         statusKepegawaian: string | null
         statusBup: string | null
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       const totalBupSudahPensiun = allPegawai.filter(p => p.statusBup === 'sudah_pensiun').length
 
       // Get total sekolah
-      const totalSekolah = count('Sekolah', "status = 'aktif'")
+      const totalSekolah = await count('Sekolah', "status = 'aktif'")
 
       // Absensi stats for current month
       const now = new Date()
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         ? [startOfMonth, endOfMonth, sekolahId]
         : [startOfMonth, endOfMonth]
 
-      const allAbsensi = query<{ keterangan: string | null }>(
+      const allAbsensi = await query<{ keterangan: string | null }>(
         `SELECT keterangan FROM AbsensiPegawai ${absensiWhere}`,
         absensiParams
       )
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
       const totalCuti = allAbsensi.filter(a => a.keterangan === 'Cuti').length
 
       // Per-school breakdown
-      const sekolahList = query<{
+      const sekolahList = await query<{
         id: string
         npsn: string
         namaSekolah: string
@@ -140,15 +140,15 @@ export async function GET(request: NextRequest) {
 
       // Pending validations count
       const pendingValidasi = sekolahId
-        ? count('ValidasiData', "statusValidasi = 'pending' AND sekolahId = ?", [sekolahId])
-        : count('ValidasiData', "statusValidasi = 'pending'")
+        ? await count('ValidasiData', "statusValidasi = 'pending' AND sekolahId = ?", [sekolahId])
+        : await count('ValidasiData', "statusValidasi = 'pending'")
 
       // Pending mutasi count
       let pendingMutasi = 0
       if (sekolahId) {
-        pendingMutasi = count('MutasiPegawai', "status = 'pending' AND (sekolahAsalId = ? OR sekolahTujuanId = ?)", [sekolahId, sekolahId])
+        pendingMutasi = await count('MutasiPegawai', "status = 'pending' AND (sekolahAsalId = ? OR sekolahTujuanId = ?)", [sekolahId, sekolahId])
       } else {
-        pendingMutasi = count('MutasiPegawai', "status = 'pending'")
+        pendingMutasi = await count('MutasiPegawai', "status = 'pending'")
       }
 
       return NextResponse.json({

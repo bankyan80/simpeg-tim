@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query, execute, queryOne } from '@/lib/db-sqlite'
+import { query, execute, queryOne } from '@/lib/db-turso'
 
 // Hardcoded school data as fallback
 const HARDCODED_SEKOLAH = [
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
         params.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`)
       }
 
-      const sekolah = query<{
+      const sekolah = await query<{
         id: string
         npsn: string
         namaSekolah: string
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if NPSN already exists
-      const existing = queryOne('SELECT id FROM Sekolah WHERE npsn = ?', [npsn])
+      const existing = await queryOne('SELECT id FROM Sekolah WHERE npsn = ?', [npsn])
       if (existing) {
         return NextResponse.json(
           { success: false, error: 'NPSN sudah terdaftar' },
@@ -119,13 +119,13 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const result = execute(
+      const result = await execute(
         `INSERT INTO Sekolah (id, npsn, namaSekolah, jenjang, kecamatan, desa, alamat, kepalaSekolah, status, createdAt, updatedAt)
          VALUES (lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(2)) || '-' || hex(randomblob(6))), ?, ?, ?, ?, ?, ?, ?, 'aktif', datetime('now'), datetime('now'))`,
         [npsn, namaSekolah, jenjang, kecamatan || 'Lemahabang', desa || null, alamat || null, kepalaSekolah || null]
       )
 
-      const newSekolah = queryOne('SELECT * FROM Sekolah WHERE npsn = ?', [npsn])
+      const newSekolah = await queryOne('SELECT * FROM Sekolah WHERE npsn = ?', [npsn])
 
       return NextResponse.json({
         success: true,
