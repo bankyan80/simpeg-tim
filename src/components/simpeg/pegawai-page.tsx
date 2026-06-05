@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Table,
@@ -140,6 +139,9 @@ interface PegawaiFormData {
   tahunSertifikasi: string
   nrg: string
   statusTpg: string
+  tahunPensiun: string
+  statusBup: string
+  keteranganBup: string
 }
 
 const emptyForm: PegawaiFormData = {
@@ -175,6 +177,9 @@ const emptyForm: PegawaiFormData = {
   tahunSertifikasi: '',
   nrg: '',
   statusTpg: '',
+  tahunPensiun: '',
+  statusBup: '',
+  keteranganBup: '',
 }
 
 function pegawaiToForm(p: Pegawai): PegawaiFormData {
@@ -211,6 +216,9 @@ function pegawaiToForm(p: Pegawai): PegawaiFormData {
     tahunSertifikasi: p.tahunSertifikasi ?? '',
     nrg: p.nrg ?? '',
     statusTpg: p.statusTpg ?? '',
+    tahunPensiun: p.tahunPensiun?.toString() ?? '',
+    statusBup: p.statusBup ?? '',
+    keteranganBup: p.keteranganBup ?? '',
   }
 }
 
@@ -1880,6 +1888,42 @@ function PegawaiFormDialog({
                     value={formData.statusTpg}
                     onChange={(e) => handleChange('statusTpg', e.target.value)}
                     placeholder="Status TPG"
+                  />
+                </FormField>
+              </div>
+            </section>
+
+            {/* Section F: BUP / Pensiun */}
+            <section>
+              <h3 className="text-sm font-semibold text-blue-700 border-b border-blue-200 pb-2 mb-4">
+                F. BUP / Pensiun
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FormField label="Tahun Pensiun">
+                  <Input
+                    type="number"
+                    value={formData.tahunPensiun}
+                    onChange={(e) => handleChange('tahunPensiun', e.target.value)}
+                    placeholder="Tahun pensiun"
+                  />
+                </FormField>
+                <FormField label="Status BUP">
+                  <Select value={formData.statusBup} onValueChange={(v) => handleChange('statusBup', v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aktif">Aktif</SelectItem>
+                      <SelectItem value="akan_pensiun">Akan Pensiun</SelectItem>
+                      <SelectItem value="sudah_pensiun">Sudah Pensiun</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField label="Keterangan BUP">
+                  <Input
+                    value={formData.keteranganBup}
+                    onChange={(e) => handleChange('keteranganBup', e.target.value)}
+                    placeholder="Keterangan"
                   />
                 </FormField>
               </div>
