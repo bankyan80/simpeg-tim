@@ -258,6 +258,19 @@ export default function PegawaiPage() {
   // ---- Delete dialog ----
   const [deleteTarget, setDeleteTarget] = useState<Pegawai | null>(null)
 
+  // ---- Riwayat form dialog ----
+  const [riwayatFormJenis, setRiwayatFormJenis] = useState('')
+  const [riwayatFormOpen, setRiwayatFormOpen] = useState(false)
+  const [riwayatForm, setRiwayatForm] = useState<Record<string, string>>({})
+
+  // ---- Dokumen form ----
+  const [dokumenFormOpen, setDokumenFormOpen] = useState(false)
+  const [dokumenForm, setDokumenForm] = useState({ jenisDokumen: '', namaFile: '', urlFile: '' })
+
+  // ---- Riwayat/Dokumen delete ----
+  const [deleteRiwayatTarget, setDeleteRiwayatTarget] = useState<{ id: string; jenis: string } | null>(null)
+  const [deleteDokumenTarget, setDeleteDokumenTarget] = useState<string | null>(null)
+
   // =====================================================================
   // DATA FETCHING
   // =====================================================================
@@ -400,6 +413,93 @@ export default function PegawaiPage() {
   }
 
   const totalPages = Math.ceil(pegawaiTotal / limit)
+
+  // =====================================================================
+  // RIWAYAT FORM HANDLERS
+  // =====================================================================
+
+  const openRiwayatForm = (jenis: string) => {
+    setRiwayatFormJenis(jenis)
+    setRiwayatForm({})
+    setRiwayatFormOpen(true)
+  }
+
+  const handleRiwayatSubmit = async () => {
+    if (!currentPegawai) return
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/riwayat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...riwayatForm, jenis: riwayatFormJenis, pegawaiId: currentPegawai.id, userId: user?.id }),
+      })
+      if (!res.ok) throw new Error('Gagal menyimpan')
+      setNotification({ type: 'success', message: 'Riwayat berhasil ditambahkan' })
+      setRiwayatFormOpen(false)
+      loadPegawaiDetail(currentPegawai.id)
+    } catch {
+      setNotification({ type: 'error', message: 'Gagal menyimpan riwayat' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteRiwayat = async () => {
+    if (!deleteRiwayatTarget || !currentPegawai) return
+    try {
+      const res = await fetch(`/api/riwayat/${deleteRiwayatTarget.id}?jenis=${deleteRiwayatTarget.jenis}&userId=${user?.id}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Gagal menghapus')
+      setDeleteRiwayatTarget(null)
+      loadPegawaiDetail(currentPegawai.id)
+    } catch {
+      setNotification({ type: 'error', message: 'Gagal menghapus riwayat' })
+    }
+  }
+
+  // =====================================================================
+  // DOKUMEN FORM HANDLERS
+  // =====================================================================
+
+  const handleDokumenSubmit = async () => {
+    if (!currentPegawai) return
+    if (!dokumenForm.jenisDokumen || !dokumenForm.namaFile) {
+      setNotification({ type: 'error', message: 'Jenis dokumen dan nama file wajib diisi' })
+      return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/dokumen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...dokumenForm, pegawaiId: currentPegawai.id, userId: user?.id }),
+      })
+      if (!res.ok) throw new Error('Gagal menyimpan')
+      setNotification({ type: 'success', message: 'Dokumen berhasil ditambahkan' })
+      setDokumenFormOpen(false)
+      setDokumenForm({ jenisDokumen: '', namaFile: '', urlFile: '' })
+      loadPegawaiDetail(currentPegawai.id)
+    } catch {
+      setNotification({ type: 'error', message: 'Gagal menyimpan dokumen' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteDokumen = async () => {
+    if (!deleteDokumenTarget || !currentPegawai) return
+    try {
+      const res = await fetch(`/api/dokumen/${deleteDokumenTarget}?userId=${user?.id}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Gagal menghapus')
+      setDeleteDokumenTarget(null)
+      loadPegawaiDetail(currentPegawai.id)
+    } catch {
+      setNotification({ type: 'error', message: 'Gagal menghapus dokumen' })
+    }
+  }
 
   // =====================================================================
   // DETAIL VIEW
@@ -702,8 +802,11 @@ export default function PegawaiPage() {
             <div className="space-y-6">
               {/* Riwayat Jabatan */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-blue-800">Riwayat Jabatan</CardTitle>
+                  <Button size="sm" variant="outline" onClick={() => openRiwayatForm('jabatan')} className="border-blue-300 text-blue-700">
+                    <Plus className="size-3.5 mr-1" /> Tambah
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {p.riwayatJabatan && p.riwayatJabatan.length > 0 ? (
@@ -715,6 +818,7 @@ export default function PegawaiPage() {
                             <TableHead>Unit Kerja</TableHead>
                             <TableHead>TMT</TableHead>
                             <TableHead>Nomor SK</TableHead>
+                            <TableHead className="w-16"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -724,6 +828,12 @@ export default function PegawaiPage() {
                               <TableCell>{r.unitKerja ?? '-'}</TableCell>
                               <TableCell>{r.tmtJabatan ? new Date(r.tmtJabatan).toLocaleDateString('id-ID') : '-'}</TableCell>
                               <TableCell>{r.nomorSk ?? '-'}</TableCell>
+                              <TableCell>
+                                <Button size="icon" variant="ghost" className="size-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => setDeleteRiwayatTarget({ id: r.id, jenis: 'jabatan' })} title="Hapus">
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -737,8 +847,11 @@ export default function PegawaiPage() {
 
               {/* Riwayat Mutasi */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-blue-800">Riwayat Mutasi</CardTitle>
+                  <Button size="sm" variant="outline" onClick={() => openRiwayatForm('mutasi')} className="border-blue-300 text-blue-700">
+                    <Plus className="size-3.5 mr-1" /> Tambah
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {p.riwayatMutasi && p.riwayatMutasi.length > 0 ? (
@@ -751,6 +864,7 @@ export default function PegawaiPage() {
                             <TableHead>Tanggal</TableHead>
                             <TableHead>Nomor SK</TableHead>
                             <TableHead>Keterangan</TableHead>
+                            <TableHead className="w-16"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -761,6 +875,12 @@ export default function PegawaiPage() {
                               <TableCell>{r.tanggalMutasi ? new Date(r.tanggalMutasi).toLocaleDateString('id-ID') : '-'}</TableCell>
                               <TableCell>{r.nomorSk ?? '-'}</TableCell>
                               <TableCell>{r.keterangan ?? '-'}</TableCell>
+                              <TableCell>
+                                <Button size="icon" variant="ghost" className="size-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => setDeleteRiwayatTarget({ id: r.id, jenis: 'mutasi' })} title="Hapus">
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -774,8 +894,11 @@ export default function PegawaiPage() {
 
               {/* Riwayat Pelatihan */}
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="text-blue-800">Riwayat Pelatihan</CardTitle>
+                  <Button size="sm" variant="outline" onClick={() => openRiwayatForm('pelatihan')} className="border-blue-300 text-blue-700">
+                    <Plus className="size-3.5 mr-1" /> Tambah
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {p.riwayatPelatihan && p.riwayatPelatihan.length > 0 ? (
@@ -787,6 +910,7 @@ export default function PegawaiPage() {
                             <TableHead>Penyelenggara</TableHead>
                             <TableHead>Tahun</TableHead>
                             <TableHead>Nomor Sertifikat</TableHead>
+                            <TableHead className="w-16"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -796,6 +920,12 @@ export default function PegawaiPage() {
                               <TableCell>{r.penyelenggara ?? '-'}</TableCell>
                               <TableCell>{r.tahunPelatihan ?? '-'}</TableCell>
                               <TableCell>{r.nomorSertifikat ?? '-'}</TableCell>
+                              <TableCell>
+                                <Button size="icon" variant="ghost" className="size-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => setDeleteRiwayatTarget({ id: r.id, jenis: 'pelatihan' })} title="Hapus">
+                                  <Trash2 className="size-3.5" />
+                                </Button>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -812,8 +942,11 @@ export default function PegawaiPage() {
           {/* Tab 8: Dokumen */}
           <TabsContent value="dokumen">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-blue-800">Dokumen Pegawai</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => setDokumenFormOpen(true)} className="border-blue-300 text-blue-700">
+                  <Plus className="size-3.5 mr-1" /> Tambah
+                </Button>
               </CardHeader>
               <CardContent>
                 {p.dokumenPegawai && p.dokumenPegawai.length > 0 ? (
@@ -825,6 +958,7 @@ export default function PegawaiPage() {
                           <TableHead>Nama File</TableHead>
                           <TableHead>Ukuran</TableHead>
                           <TableHead>Tanggal Upload</TableHead>
+                          <TableHead className="w-16"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -836,6 +970,12 @@ export default function PegawaiPage() {
                             <TableCell>{d.namaFile ?? '-'}</TableCell>
                             <TableCell>{d.ukuranFile ? `${(d.ukuranFile / 1024).toFixed(1)} KB` : '-'}</TableCell>
                             <TableCell>{new Date(d.uploadedAt).toLocaleDateString('id-ID')}</TableCell>
+                            <TableCell>
+                              <Button size="icon" variant="ghost" className="size-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => setDeleteDokumenTarget(d.id)} title="Hapus">
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -880,6 +1020,152 @@ export default function PegawaiPage() {
           sekolahId={sekolahId}
           sekolahList={sekolahList}
         />
+
+        {/* Riwayat Form Dialog */}
+        <Dialog open={riwayatFormOpen} onOpenChange={setRiwayatFormOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-blue-800">
+                Tambah Riwayat {riwayatFormJenis === 'jabatan' ? 'Jabatan' : riwayatFormJenis === 'mutasi' ? 'Mutasi' : 'Pelatihan'}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {riwayatFormJenis === 'jabatan' && (
+                <>
+                  <FormField label="Jabatan" required>
+                    <Input value={riwayatForm.jabatan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, jabatan: e.target.value }))} placeholder="Nama jabatan" />
+                  </FormField>
+                  <FormField label="Unit Kerja">
+                    <Input value={riwayatForm.unitKerja ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, unitKerja: e.target.value }))} placeholder="Unit kerja" />
+                  </FormField>
+                  <FormField label="TMT">
+                    <Input type="date" value={riwayatForm.tmtJabatan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, tmtJabatan: e.target.value }))} />
+                  </FormField>
+                  <FormField label="Nomor SK">
+                    <Input value={riwayatForm.nomorSk ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, nomorSk: e.target.value }))} placeholder="No. SK" />
+                  </FormField>
+                </>
+              )}
+              {riwayatFormJenis === 'mutasi' && (
+                <>
+                  <FormField label="Sekolah Asal">
+                    <Input value={riwayatForm.sekolahAsal ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, sekolahAsal: e.target.value }))} placeholder="Nama sekolah asal" />
+                  </FormField>
+                  <FormField label="Sekolah Tujuan">
+                    <Input value={riwayatForm.sekolahTujuan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, sekolahTujuan: e.target.value }))} placeholder="Nama sekolah tujuan" />
+                  </FormField>
+                  <FormField label="Tanggal">
+                    <Input type="date" value={riwayatForm.tanggalMutasi ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, tanggalMutasi: e.target.value }))} />
+                  </FormField>
+                  <FormField label="Nomor SK">
+                    <Input value={riwayatForm.nomorSk ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, nomorSk: e.target.value }))} placeholder="No. SK" />
+                  </FormField>
+                  <FormField label="Keterangan">
+                    <Input value={riwayatForm.keterangan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, keterangan: e.target.value }))} placeholder="Keterangan" />
+                  </FormField>
+                </>
+              )}
+              {riwayatFormJenis === 'pelatihan' && (
+                <>
+                  <FormField label="Nama Pelatihan" required>
+                    <Input value={riwayatForm.namaPelatihan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, namaPelatihan: e.target.value }))} placeholder="Nama pelatihan" />
+                  </FormField>
+                  <FormField label="Penyelenggara">
+                    <Input value={riwayatForm.penyelenggara ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, penyelenggara: e.target.value }))} placeholder="Penyelenggara" />
+                  </FormField>
+                  <FormField label="Tahun">
+                    <Input value={riwayatForm.tahunPelatihan ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, tahunPelatihan: e.target.value }))} placeholder="Tahun" />
+                  </FormField>
+                  <FormField label="Nomor Sertifikat">
+                    <Input value={riwayatForm.nomorSertifikat ?? ''} onChange={e => setRiwayatForm(f => ({ ...f, nomorSertifikat: e.target.value }))} placeholder="No. Sertifikat" />
+                  </FormField>
+                </>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRiwayatFormOpen(false)}>Batal</Button>
+              <Button onClick={handleRiwayatSubmit} disabled={submitting} className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white">
+                {submitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dokumen Form Dialog */}
+        <Dialog open={dokumenFormOpen} onOpenChange={setDokumenFormOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-blue-800">Tambah Dokumen</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <FormField label="Jenis Dokumen" required>
+                <Select value={dokumenForm.jenisDokumen} onValueChange={v => setDokumenForm(f => ({ ...f, jenisDokumen: v }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih jenis" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="KTP">KTP</SelectItem>
+                    <SelectItem value="KK">KK</SelectItem>
+                    <SelectItem value="Ijazah">Ijazah</SelectItem>
+                    <SelectItem value="SK_Pengangkatan">SK Pengangkatan</SelectItem>
+                    <SelectItem value="SK_Pangkat">SK Pangkat</SelectItem>
+                    <SelectItem value="Sertifikat_Pendidik">Sertifikat Pendidik</SelectItem>
+                    <SelectItem value="Kartu_ASN_PPPK">Kartu ASN/PPPK</SelectItem>
+                    <SelectItem value="Dokumen_Lainnya">Dokumen Lainnya</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+              <FormField label="Nama File" required>
+                <Input value={dokumenForm.namaFile} onChange={e => setDokumenForm(f => ({ ...f, namaFile: e.target.value }))} placeholder="Nama file" />
+              </FormField>
+              <FormField label="URL / Link">
+                <Input value={dokumenForm.urlFile} onChange={e => setDokumenForm(f => ({ ...f, urlFile: e.target.value }))} placeholder="URL file (opsional)" />
+              </FormField>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDokumenFormOpen(false)}>Batal</Button>
+              <Button onClick={handleDokumenSubmit} disabled={submitting} className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white">
+                {submitting ? 'Menyimpan...' : 'Simpan'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Riwayat confirmation */}
+        <AlertDialog open={!!deleteRiwayatTarget} onOpenChange={(open) => !open && setDeleteRiwayatTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
+              <AlertDialogDescription>
+                Yakin ingin menghapus riwayat ini?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteRiwayat} className="bg-red-600 hover:bg-red-700">
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Dokumen confirmation */}
+        <AlertDialog open={!!deleteDokumenTarget} onOpenChange={(open) => !open && setDeleteDokumenTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
+              <AlertDialogDescription>
+                Yakin ingin menghapus dokumen ini?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteDokumen} className="bg-red-600 hover:bg-red-700">
+                Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     )
   }

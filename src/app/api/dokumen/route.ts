@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { query } from '@/lib/db-sqlite'
+import { query, execute } from '@/lib/db-sqlite'
+import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
   try {
@@ -53,6 +54,47 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('Dokumen GET error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Terjadi kesalahan server' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { pegawaiId, jenisDokumen, namaFile, urlFile, ukuranFile, userId } = body
+
+    if (!pegawaiId || !jenisDokumen) {
+      return NextResponse.json(
+        { success: false, error: 'pegawaiId dan jenisDokumen wajib diisi' },
+        { status: 400 }
+      )
+    }
+
+    const id = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    execute(
+      `INSERT INTO DokumenPegawai (id, pegawaiId, jenisDokumen, namaFile, urlFile, ukuranFile, uploadedAt) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, pegawaiId, jenisDokumen, namaFile || null, urlFile || null, ukuranFile || null, now]
+    )
+
+    if (userId) {
+      execute(
+        `INSERT INTO LogAktivitas (id, userId, aksi, modul, keterangan, createdAt) VALUES (?, ?, 'tambah', 'pegawai', ?, ?)`,
+        [crypto.randomUUID(), userId, `Menambahkan dokumen ${jenisDokumen}`, now]
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Dokumen berhasil ditambahkan',
+      data: { id },
+    })
+  } catch (error) {
+    console.error('Dokumen POST error:', error)
     return NextResponse.json(
       { success: false, error: 'Terjadi kesalahan server' },
       { status: 500 }
