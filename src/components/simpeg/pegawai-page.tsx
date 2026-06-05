@@ -386,6 +386,11 @@ export default function PegawaiPage() {
       })
       setFormOpen(false)
       fetchPegawai()
+      // Reload detail view if editing from detail view
+      if (editingPegawai && selectedPegawaiId === editingPegawai.id) {
+        loadPegawaiDetail(editingPegawai.id)
+      }
+      setEditingPegawai(null)
     } catch (e) {
       setNotification({
         type: 'error',
@@ -1824,14 +1829,6 @@ function PegawaiFormDialog({
                     value={formData.jurusan}
                     onChange={(e) => handleChange('jurusan', e.target.value)}
                     placeholder="Jurusan/Prodi"
-                  />
-                </FormField>
-                <FormField label="Nomor Ijazah">
-                  <Input
-                    value={''}
-                    onChange={(e) => e.target.value}
-                    placeholder="Nomor Ijazah"
-                    disabled
                   />
                 </FormField>
               </div>
