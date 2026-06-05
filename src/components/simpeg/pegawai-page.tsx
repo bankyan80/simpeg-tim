@@ -1065,6 +1065,8 @@ export default function PegawaiPage() {
           isAdmin={isAdmin}
           sekolahId={sekolahId}
           sekolahList={sekolahList}
+          handleSectionSave={handleSectionSave}
+          savingSection={savingSection}
         />
 
         {/* Riwayat Form Dialog */}
@@ -1527,6 +1529,8 @@ export default function PegawaiPage() {
         isAdmin={isAdmin}
         sekolahId={sekolahId}
         sekolahList={sekolahList}
+        handleSectionSave={handleSectionSave}
+        savingSection={savingSection}
       />
     </div>
   )
@@ -1547,6 +1551,8 @@ function PegawaiFormDialog({
   isAdmin,
   sekolahId,
   sekolahList,
+  handleSectionSave,
+  savingSection,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -1558,6 +1564,8 @@ function PegawaiFormDialog({
   isAdmin: boolean
   sekolahId: string
   sekolahList: Sekolah[]
+  handleSectionSave: (section: string, fields: (keyof PegawaiFormData)[]) => Promise<void>
+  savingSection: string | null
 }) {
   const handleChange = (field: keyof PegawaiFormData, value: string | number | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
