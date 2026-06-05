@@ -222,9 +222,14 @@ function pegawaiToForm(p: Pegawai): PegawaiFormData {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
+const SECTION_FIELDS: Record<string, (keyof PegawaiFormData)[]> = {
+  A: ['nik', 'nip', 'nuptk', 'nama', 'tempatLahir', 'tanggalLahir', 'jenisKelamin', 'agama', 'alamat', 'noHp', 'email'],
+  B: ['sekolahId', 'jabatan', 'jenisPegawai', 'statusKepegawaian', 'statusPegawai', 'tmtTugas', 'tmtSekolah', 'tmtJabatan', 'masaKerjaTahun', 'masaKerjaBulan'],
+  C: ['pangkat', 'golongan', 'tmtPangkat'],
+  D: ['pendidikanTerakhir', 'jurusan'],
+  E: ['sertifikasi', 'nomorSertifikat', 'bidangSertifikasi', 'tahunSertifikasi', 'nrg', 'statusTpg'],
+  F: ['tahunPensiun', 'statusBup', 'keteranganBup'],
+}
 
 export default function PegawaiPage() {
   const {
@@ -262,6 +267,7 @@ export default function PegawaiPage() {
   const [editingPegawai, setEditingPegawai] = useState<Pegawai | null>(null)
   const [formData, setFormData] = useState<PegawaiFormData>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
+  const [savingSection, setSavingSection] = useState<string | null>(null)
 
   // ---- Delete dialog ----
   const [deleteTarget, setDeleteTarget] = useState<Pegawai | null>(null)
@@ -333,6 +339,33 @@ export default function PegawaiPage() {
     setEditingPegawai(p)
     setFormData(pegawaiToForm(p))
     setFormOpen(true)
+  }
+
+  const handleSectionSave = async (section: string, fields: (keyof PegawaiFormData)[]) => {
+    if (!editingPegawai) return
+    setSavingSection(section)
+    try {
+      const body: Record<string, unknown> = { userId: user?.id }
+      fields.forEach((f) => {
+        body[f] = formData[f]
+      })
+      const res = await fetch(`/api/pegawai/${editingPegawai.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Gagal menyimpan')
+      setNotification({ type: 'success', message: `Bagian ${section} berhasil disimpan` })
+      fetchPegawai()
+      if (selectedPegawaiId === editingPegawai.id) {
+        loadPegawaiDetail(editingPegawai.id)
+      }
+    } catch (e) {
+      setNotification({ type: 'error', message: e instanceof Error ? e.message : 'Gagal menyimpan' })
+    } finally {
+      setSavingSection(null)
+    }
   }
 
   const handleFormChange = (field: keyof PegawaiFormData, value: string | number | boolean) => {
@@ -1646,6 +1679,19 @@ function PegawaiFormDialog({
                   </FormField>
                 </div>
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('A', SECTION_FIELDS.A)}
+                    disabled={savingSection === 'A'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'A' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Section B: Data Kepegawaian */}
@@ -1771,6 +1817,19 @@ function PegawaiFormDialog({
                   </div>
                 )}
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('B', SECTION_FIELDS.B)}
+                    disabled={savingSection === 'B'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'B' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Section C: Pangkat & Golongan */}
@@ -1801,6 +1860,19 @@ function PegawaiFormDialog({
                   />
                 </FormField>
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('C', SECTION_FIELDS.C)}
+                    disabled={savingSection === 'C'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'C' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Section D: Pendidikan */}
@@ -1829,6 +1901,19 @@ function PegawaiFormDialog({
                   />
                 </FormField>
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('D', SECTION_FIELDS.D)}
+                    disabled={savingSection === 'D'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'D' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Section E: Sertifikasi */}
@@ -1885,6 +1970,19 @@ function PegawaiFormDialog({
                   />
                 </FormField>
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('E', SECTION_FIELDS.E)}
+                    disabled={savingSection === 'E'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'E' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
 
             {/* Section F: BUP / Pensiun */}
@@ -1921,6 +2019,19 @@ function PegawaiFormDialog({
                   />
                 </FormField>
               </div>
+              {editingPegawai && (
+                <div className="flex justify-end mt-4">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSectionSave('F', SECTION_FIELDS.F)}
+                    disabled={savingSection === 'F'}
+                    className="bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {savingSection === 'F' && <Loader2 className="size-3 animate-spin mr-1" />}
+                    Simpan
+                  </Button>
+                </div>
+              )}
             </section>
           </div>
         </ScrollArea>
