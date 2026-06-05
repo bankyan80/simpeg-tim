@@ -1695,15 +1695,17 @@ function PegawaiFormDialog({
                   </Select>
                 </FormField>
                 <FormField label="Status Aktif">
-                  <div className="flex items-center gap-3 h-9">
-                    <Switch
-                      checked={formData.statusPegawai === 'aktif'}
-                      onCheckedChange={(checked) => handleChange('statusPegawai', checked ? 'aktif' : 'tidak_aktif')}
-                    />
-                    <Label className="text-sm">
-                      {formData.statusPegawai === 'aktif' ? 'Aktif' : 'Tidak Aktif'}
-                    </Label>
-                  </div>
+                  <Select value={formData.statusPegawai} onValueChange={(v) => handleChange('statusPegawai', v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aktif">Aktif</SelectItem>
+                      <SelectItem value="tidak_aktif">Tidak Aktif</SelectItem>
+                      <SelectItem value="pensiun">Pensiun</SelectItem>
+                      <SelectItem value="mutasi">Mutasi</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormField>
                 <FormField label="Tanggal Mulai Tugas">
                   <Input
