@@ -1351,10 +1351,7 @@ export default function PegawaiPage() {
                   <TableRow
                     key={p.id}
                     className="cursor-pointer hover:bg-blue-50/50"
-                    onClick={() => {
-                      setSelectedPegawaiId(p.id)
-                      setDetailTab('identitas')
-                    }}
+                    onClick={() => openEditForm(p)}
                   >
                     <TableCell>{(page - 1) * limit + idx + 1}</TableCell>
                     <TableCell className="font-medium">
