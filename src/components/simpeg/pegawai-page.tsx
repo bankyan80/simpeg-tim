@@ -1575,7 +1575,7 @@ function PegawaiFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col gap-0">
         <DialogHeader>
           <DialogTitle className="text-blue-800">
             {editingPegawai ? 'Edit Data Pegawai' : 'Tambah Pegawai Baru'}
@@ -1587,7 +1587,7 @@ function PegawaiFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4 -mr-4">
+        <div className="flex-1 overflow-y-auto -mx-6 px-6">
           <div className="space-y-6 pb-4">
             {/* Section A: Identitas Pegawai */}
             <section>
@@ -2042,7 +2042,7 @@ function PegawaiFormDialog({
               )}
             </section>
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
