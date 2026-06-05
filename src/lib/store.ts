@@ -232,7 +232,12 @@ export const useSimpegStore = create<SimpegStore>()(
       loadPegawai: async (filters?: Record<string, string>) => {
         set({ loading: true });
         try {
-          const qs = buildQueryString(filters);
+          const state = get();
+          const effectiveFilters = { ...filters };
+          if (state.user && state.user.role !== 'admin_kecamatan' && state.user.sekolahId && !effectiveFilters.sekolahId) {
+            effectiveFilters.sekolahId = state.user.sekolahId;
+          }
+          const qs = buildQueryString(effectiveFilters);
           const res = await fetch(`/api/pegawai${qs}`);
           if (!res.ok) throw new Error('Gagal memuat data pegawai');
           const data = await res.json();
