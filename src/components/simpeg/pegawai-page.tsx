@@ -356,6 +356,17 @@ export default function PegawaiPage() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Gagal menyimpan')
+      // Update formData with server response to sync computed fields (tahunPensiun, statusBup)
+      if (json.data) {
+        const updated = pegawaiToForm(json.data)
+        setFormData((prev) => {
+          const merged = { ...prev }
+          fields.forEach((f) => { merged[f] = updated[f] })
+          merged.tahunPensiun = updated.tahunPensiun
+          merged.statusBup = updated.statusBup
+          return merged
+        })
+      }
       setNotification({ type: 'success', message: `Bagian ${section} berhasil disimpan` })
       fetchPegawai()
       if (selectedPegawaiId === editingPegawai.id) {
